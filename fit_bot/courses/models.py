@@ -80,7 +80,6 @@ class UnpaidUserContent(Content):
 @receiver(post_save, sender=DailyContent)
 def upload_to_telegram(sender, instance=None, created=False, **kwargs):
     if created:
-
         if instance.video:
             with open(instance.video.path, 'rb') as video_file:
                 message = bot.send_video(chat_id=305378717, video=video_file)
@@ -100,8 +99,3 @@ def upload_to_telegram(sender, instance=None, created=False, **kwargs):
                 instance.gif.delete(save=False)
 
         instance.save()
-
-
-
-
-

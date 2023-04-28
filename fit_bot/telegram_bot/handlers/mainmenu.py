@@ -23,7 +23,7 @@ def start_message(message: Message):
 
         markup = ReplyKeyboardMarkup(resize_keyboard=True)
         button3 = KeyboardButton('Приобрести подписку на курс')
-        button4 = KeyboardButton('Контакт оператора')
+        button4 = KeyboardButton('Появились вопросики...')
 
         markup.add(button3)
         markup.add(button4)
