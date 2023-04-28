@@ -1,5 +1,6 @@
 Django==4.1.7
 pytelegrambotapi==4.10.0
+psycopg2
 pytz
 timezonefinder
 geopy
