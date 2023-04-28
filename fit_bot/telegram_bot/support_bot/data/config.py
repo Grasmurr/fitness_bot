@@ -1,0 +1,3 @@
+support_token = '6279405427:AAEd-UR29TtIsyTYQuWTJ9vlnuNYJert88E'
+
+ADMIN = 305378717
