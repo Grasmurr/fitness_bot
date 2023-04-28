@@ -10,10 +10,10 @@ from telegram_bot.support_bot.bot import start_support_bot
 
 
 if __name__ == '__main__':
-    start_support_bot()
-    # while True:
-    #     try:
-    #
-    #     except:
-    #         time.sleep(1)
-    #         continue
+
+    while True:
+        try:
+            start_support_bot()
+        except:
+            time.sleep(1)
+            continue

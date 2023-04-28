@@ -10,10 +10,9 @@ from telegram_bot.bot import start_bot
 
 
 if __name__ == '__main__':
-    start_bot()
-    # while True:
-    #     try:
-    #
-    #     except:
-    #         time.sleep(1)
-    #         continue
+    while True:
+        try:
+            start_bot()
+        except:
+            time.sleep(1)
+            continue
