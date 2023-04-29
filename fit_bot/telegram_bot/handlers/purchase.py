@@ -8,7 +8,7 @@ from telegram_bot.states import States
 from telegram_bot.models import UnpaidUser, PaidUser, UserCalories, BankCards
 
 
-ADMIN_CHAT_ID = 305378717
+ADMIN_CHAT_ID = 58790442
 user_data = {}
 
 
