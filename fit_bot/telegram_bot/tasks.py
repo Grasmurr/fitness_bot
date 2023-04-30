@@ -34,7 +34,6 @@ def send_daily_content(user):
         day=current_day,
         **(Q(sequence_number=1) | Q(sequence_number=2))
     )
-
     # Отправляем контент пользователю через Telegram Bot API
     for content in daily_contents:
         updated_caption = content.caption.replace("calories", str(user.calories)).replace("name", user.full_name)
@@ -73,24 +72,24 @@ def check_and_send_content():
                 bot.send_message(chat_id=305378717, text='да, это работает')
                 send_daily_content(user)
 
-            elif current_time_local.hour == 18 and current_time_local.minute == 00:
+            if current_time_local.hour == 18 and current_time_local.minute == 40:
                 check_calories(user)
 
-            elif delta_days == 22:
-                finished_user = FinishedUser(
-                    user=user.user,
-                    username=user.username,
-                    full_name=user.full_name,
-                    paid_day=user.paid_day,
-                    calories=user.calories,
-                    timezone=user.timezone,
-                    пол=user.пол,
-                    цель=user.цель,
-                    место=user.место,
-                    уровень=user.уровень,
-                )
-                finished_user.save()
-                user.delete()
+        if delta_days == 22:
+            finished_user = FinishedUser(
+                user=user.user,
+                username=user.username,
+                full_name=user.full_name,
+                paid_day=user.paid_day,
+                calories=user.calories,
+                timezone=user.timezone,
+                пол=user.пол,
+                цель=user.цель,
+                место=user.место,
+                уровень=user.уровень,
+            )
+            finished_user.save()
+            user.delete()
 
 
 def change_calories_norm():
@@ -103,7 +102,6 @@ def change_calories_norm():
                 PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.091)
             else:
                 PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.89)
-
 
 
 def start_scheduler():
