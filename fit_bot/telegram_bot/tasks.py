@@ -7,7 +7,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 import datetime
 
-from telegram_bot.models import PaidUser, FinishedUser
+from telegram_bot.models import PaidUser, FinishedUser, UserCalories
 from courses.models import Категории, Content, DailyContent
 from telegram_bot.loader import bot
 from telegram_bot.states import States
@@ -55,6 +55,26 @@ def check_calories(user):
                                              'употребили, если еще не сделали этого!')
 
 
+def check_for_daily_content(user, current_day):
+    try:
+        matching_category = Категории.objects.get(
+            пол=user.пол,
+            цель=user.цель,
+            место=user.место,
+            уровень=user.уровень
+        )
+
+        if current_day != 0:
+            daily_contents = DailyContent.objects.filter(category=matching_category, day=current_day, sequence_number__gte=3)
+            if daily_contents:
+                user_calories = UserCalories.objects.get(user=user)
+                is_requested = getattr(user_calories, f'day{current_day}_requested')
+
+                if not is_requested:
+                    bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
+    except:
+        pass
+
 def check_and_send_content():
     current_time_utc = datetime.datetime.now(pytz.utc)
 
@@ -74,6 +94,15 @@ def check_and_send_content():
 
             if current_time_local.hour == 18 and current_time_local.minute == 40:
                 check_calories(user)
+
+            if current_time_local.hour == 11 and current_time_local.minute == 0:
+                check_for_daily_content(user, delta_days)
+
+            if current_time_local.hour == 18 and current_time_local.minute == 0:
+                check_for_daily_content(user, delta_days)
+
+            if current_time_local.hour == 22 and current_time_local.minute == 0:
+                check_for_daily_content(user, delta_days)
 
         if delta_days == 22:
             finished_user = FinishedUser(
@@ -99,7 +128,7 @@ def change_calories_norm():
 
         if delta_days == 8:
             if user.цель == "G":
-                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.091)
+                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
             else:
                 PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.89)
 

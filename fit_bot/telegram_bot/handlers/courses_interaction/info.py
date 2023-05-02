@@ -5,7 +5,7 @@ from telegram_bot.states import States
 
 
 from courses.models import Категории, Content, DailyContent
-from telegram_bot.models import PaidUser, UnpaidUser
+from telegram_bot.models import PaidUser, UnpaidUser, UserCalories
 
 
 @bot.message_handler(func=lambda message: message.text == 'Получить тренировки 🎾')
@@ -31,6 +31,10 @@ def get_courses(message: Message):
                 if daily_contents:
                     # Отправляем контент пользователю через Telegram Bot API
                     for content in daily_contents:
+                        user_calories = UserCalories.objects.get(user=user)
+                        setattr(user_calories, f'day{current_day}_requested', True)
+                        user_calories.save()
+
                         updated_caption = content.caption.replace("calories", str(user.calories)).replace("name",
                                                                                                           user.full_name)
                         if content.content_type == 'V':
