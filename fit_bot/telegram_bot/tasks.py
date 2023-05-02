@@ -130,7 +130,7 @@ def change_calories_norm():
             if user.цель == "G":
                 PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
             else:
-                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.89)
+                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.858)
 
 
 def start_scheduler():

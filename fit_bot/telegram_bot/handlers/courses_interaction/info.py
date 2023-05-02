@@ -25,28 +25,27 @@ def get_courses(message: Message):
         # Вычисляем номер дня на основе оплаченного дня
         delta_days = (timezone.now().date() - user.paid_day).days
         current_day = delta_days
-        if current_day != 0:
-            # Получаем контент для соответствующей категории и дня
-                daily_contents = DailyContent.objects.filter(category=matching_category, day=current_day, sequence_number__gte=3)
-                if daily_contents:
-                    # Отправляем контент пользователю через Telegram Bot API
-                    for content in daily_contents:
-                        user_calories = UserCalories.objects.get(user=user)
-                        setattr(user_calories, f'day{current_day}_requested', True)
-                        user_calories.save()
 
-                        updated_caption = content.caption.replace("calories", str(user.calories)).replace("name",
-                                                                                                          user.full_name)
-                        if content.content_type == 'V':
-                            bot.send_video(chat_id=user.user, video=content.video_file_id, caption=updated_caption)
-                        elif content.content_type == 'T':
-                            bot.send_message(chat_id=user.user, text=updated_caption)
-                        elif content.content_type == 'P':
-                            bot.send_photo(chat_id=user.user, photo=content.photo_file_id, caption=updated_caption)
-                        elif content.content_type == 'G':
-                            bot.send_document(chat_id=user.user, document=content.gif_file_id, caption=updated_caption)
-                else:
-                    bot.send_message(chat_id=user.user, text='Кажется, что на сегодня для вас нет тренировок! следуйте инструкциям')
+        daily_contents = DailyContent.objects.filter(category=matching_category, day=current_day, sequence_number__gte=3)
+        if daily_contents:
+            # Отправляем контент пользователю через Telegram Bot API
+            for content in daily_contents:
+                user_calories = UserCalories.objects.get(user=user)
+                setattr(user_calories, f'day{current_day}_requested', True)
+                user_calories.save()
+
+                updated_caption = content.caption.replace("calories", str(user.calories)).replace("name",
+                                                                                                  user.full_name)
+                if content.content_type == 'V':
+                    bot.send_video(chat_id=user.user, video=content.video_file_id, caption=updated_caption)
+                elif content.content_type == 'T':
+                    bot.send_message(chat_id=user.user, text=updated_caption)
+                elif content.content_type == 'P':
+                    bot.send_photo(chat_id=user.user, photo=content.photo_file_id, caption=updated_caption)
+                elif content.content_type == 'G':
+                    bot.send_document(chat_id=user.user, document=content.gif_file_id, caption=updated_caption)
+        else:
+            bot.send_message(chat_id=user.user, text='Кажется, что на сегодня для вас нет тренировок! следуйте инструкциям')
     except:
         bot.send_message(chat_id=user.user,
                          text='Кажется, что на сегодня для вас нет тренировок! следуйте инструкциям')

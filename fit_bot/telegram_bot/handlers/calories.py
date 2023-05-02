@@ -103,16 +103,16 @@ def process_start_state(message):
 
         if goal == 'G':
             PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
-            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.1)
+            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125)
             bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                      f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125, 1)} ккал в день"
+                                      f"{int(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125)} ккал в день"
                                       f"\n\nУчитывайте это значение при составлении"
                                       f" своего рациона питания во время прохождения курса 21 день.")
         else:
             PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
-            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.9)
+            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875)
             bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                  f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.9, 1)} ккал в день"
+                                  f"{int(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875)} ккал в день"
                                   f"\n\nУчитывайте это значение при составлении"
                                   f" своего рациона питания во время прохождения курса 21 день.")
     start_timezone_check(message)
