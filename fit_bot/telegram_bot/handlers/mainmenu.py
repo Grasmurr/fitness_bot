@@ -28,7 +28,7 @@ def start_message(message: Message):
         markup.add(button3)
         markup.add(button4)
 
-        daily_contents = DailyContent.objects.filter(day=0)
+        daily_contents = DailyContent.objects.filter(day=0, sequence_number__lte=2)
 
         # Отправляем контент пользователю через Telegram Bot API
         for content in daily_contents:
