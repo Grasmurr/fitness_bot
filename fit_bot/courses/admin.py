@@ -52,6 +52,12 @@ class UnpaidUserContentAdmin(admin.ModelAdmin):
         return queryset
 
 
-admin.site.register(DailyContent, DailyContentAdmin)
-admin.site.register(Категории)
-admin.site.register(UnpaidUserContent, UnpaidUserContentAdmin)
+class MyAdminSite(admin.AdminSite):
+    site_header = "Админ панель 21FIT"
+
+
+my_admin_site = MyAdminSite(name='myadmin')
+
+my_admin_site.register(DailyContent, DailyContentAdmin)
+my_admin_site.register(Категории)
+my_admin_site.register(UnpaidUserContent, UnpaidUserContentAdmin)
