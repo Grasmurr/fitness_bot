@@ -35,9 +35,14 @@ class BankCardsAdmin(admin.ModelAdmin):
     actions = [export_to_xlsx_action]
 
 
-admin.site.register(UnpaidUser, UnpaidUserAdmin)
-admin.site.register(PaidUser, PaidUserAdmin)
-admin.site.register(UserCalories, UserCaloriesAdmin)
-admin.site.register(FinishedUser, FinishedUserAdmin)
-admin.site.register(SupportTicket, SupportTicketAdmin)
-admin.site.register(BankCards, BankCardsAdmin)
+class MyAdminSite(admin.AdminSite):
+    site_header = "Админ панель 21FIT"
+
+
+my_admin_site = MyAdminSite()
+my_admin_site.register(UnpaidUser, UnpaidUserAdmin)
+my_admin_site.register(PaidUser, PaidUserAdmin)
+my_admin_site.register(UserCalories, UserCaloriesAdmin)
+my_admin_site.register(FinishedUser, FinishedUserAdmin)
+my_admin_site.register(SupportTicket, SupportTicketAdmin)
+my_admin_site.register(BankCards, BankCardsAdmin)
