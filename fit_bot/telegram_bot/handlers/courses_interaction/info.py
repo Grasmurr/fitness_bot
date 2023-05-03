@@ -37,7 +37,8 @@ def get_courses(message: Message):
                 updated_caption = content.caption.replace("calories", str(user.calories)).replace("name",
                                                                                                   user.full_name)
                 if content.content_type == 'V':
-                    bot.send_video(chat_id=user.user, video=content.video_file_id, caption=updated_caption)
+                    video_file_id = content.video.video_file_id
+                    bot.send_video(chat_id=user.user, video=video_file_id, caption=updated_caption)
                 elif content.content_type == 'T':
                     bot.send_message(chat_id=user.user, text=updated_caption)
                 elif content.content_type == 'P':

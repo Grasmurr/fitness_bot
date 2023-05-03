@@ -70,7 +70,7 @@ def handle_video_upload(message: Message):
     video_file_id = video.file_id
 
     # Получение названия видео (если оно было указано в подписи к видео)
-    video_name = message.caption if message.caption else "Без названия"
+    video_name = message.video.file_name
 
     # Создание и сохранение объекта Video в базе данных
     new_video = Video(name=video_name, video_file_id=video_file_id)

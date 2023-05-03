@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Категории, UnpaidUserContent, Mailing, Training
+from .models import Категории, UnpaidUserContent, Mailing, Training, Video
 from django.db.models import Count
 from telegram_bot.admin import my_admin_site
 
@@ -15,7 +15,7 @@ class BaseContentAdmin(admin.ModelAdmin):
             'fields': ('day', 'category')
         }),
         ('Тип контента', {
-            'fields': ('content_type', 'photo', 'gif', 'caption')
+            'fields': ('content_type', 'video', 'photo', 'gif', 'caption')
         }),
         ('Дополнительная информация', {
             'fields': ('sequence_number',)
@@ -45,7 +45,7 @@ class UnpaidUserContentAdmin(admin.ModelAdmin):
             'fields': ('day',)
         }),
         ('Тип контента', {
-            'fields': ('content_type', 'photo', 'gif', 'caption')
+            'fields': ('content_type', 'video', 'photo', 'gif', 'caption')
         }),
         ('Дополнительная информация', {
             'fields': ('sequence_number',)
@@ -61,3 +61,4 @@ my_admin_site.register(Категории)
 my_admin_site.register(UnpaidUserContent, UnpaidUserContentAdmin)
 my_admin_site.register(Mailing, MailingAdmin)
 my_admin_site.register(Training, TrainingAdmin)
+my_admin_site.register(Video)

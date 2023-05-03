@@ -194,48 +194,49 @@ def handle_add_remove_callback(call):
 # Обработчик сообщений для ввода нового количества калорий
 @bot.message_handler(func=lambda message: message.from_user.id in user_data)
 def handle_new_calories(message):
-    if user_data[message.from_user.id]['state'] == States.ADD_REMOVE_CALORIES:
-        user_id = message.from_user.id
-        if message.text.isdigit():
-            new_calories = int(message.text)  # Получаем новое количество калорий из сообщения пользователя
-            if new_calories > 0:
-                # Определение индекса приема пищи
-                meal_index = {
-                    "breakfast": 0,
-                    "lunch": 1,
-                    "dinner": 2,
-                    "snack": 3,
-                }
+    if message.from_user.id in user_data:
+        if user_data[message.from_user.id]['state'] == States.ADD_REMOVE_CALORIES:
+            user_id = message.from_user.id
+            if message.text.isdigit():
+                new_calories = int(message.text)  # Получаем новое количество калорий из сообщения пользователя
+                if new_calories > 0:
+                    # Определение индекса приема пищи
+                    meal_index = {
+                        "breakfast": 0,
+                        "lunch": 1,
+                        "dinner": 2,
+                        "snack": 3,
+                    }
 
-                # Здесь нужно обновить данные о калориях пользователя
-                # Возвращает текущее состояние приема пищи, которое было выбрано в handle_meal_callback
-                current_meal = user_data[user_id]['current_meal']
-                current_meal_index = meal_index[current_meal]
+                    # Здесь нужно обновить данные о калориях пользователя
+                    # Возвращает текущее состояние приема пищи, которое было выбрано в handle_meal_callback
+                    current_meal = user_data[user_id]['current_meal']
+                    current_meal_index = meal_index[current_meal]
 
-                user = PaidUser.objects.get(user=user_id)
-                delta_days = (timezone.now().date() - user.paid_day).days
-                current_day = delta_days
+                    user = PaidUser.objects.get(user=user_id)
+                    delta_days = (timezone.now().date() - user.paid_day).days
+                    current_day = delta_days
 
-                user_calories = user_data[user_id][current_day]
-                if current_meal == 'snack':
-                    user_calories[current_meal_index].append(new_calories)
+                    user_calories = user_data[user_id][current_day]
+                    if current_meal == 'snack':
+                        user_calories[current_meal_index].append(new_calories)
+                    else:
+                        user_calories[current_meal_index] = new_calories
+
+                    user_calories_obj = UserCalories.objects.get(user=user)
+
+                    day_attr = f'day{current_day}'
+                    total_calories = sum(user_calories[:-1]) + sum(user_calories[-1])
+                    setattr(user_calories_obj, day_attr, total_calories)
+                    user_calories_obj.save()
+
+                    if total_calories > user.calories:
+                        text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше отдать предпочтение овощам (например: огурцы, морковь, капуста, брокколи)"
+                    else:
+                        text = "Количество калорий успешно обновлено!"
+                    bot.send_message(user_id, text)
+
                 else:
-                    user_calories[current_meal_index] = new_calories
-
-                user_calories_obj = UserCalories.objects.get(user=user)
-
-                day_attr = f'day{current_day}'
-                total_calories = sum(user_calories[:-1]) + sum(user_calories[-1])
-                setattr(user_calories_obj, day_attr, total_calories)
-                user_calories_obj.save()
-
-                if total_calories > user.calories:
-                    text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше отдать предпочтение овощам (например: огурцы, морковь, капуста, брокколи)"
-                else:
-                    text = "Количество калорий успешно обновлено!"
-                bot.send_message(user_id, text)
-
+                    bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
             else:
                 bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
-        else:
-            bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
