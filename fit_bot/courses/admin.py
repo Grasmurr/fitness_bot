@@ -15,7 +15,7 @@ class BaseContentAdmin(admin.ModelAdmin):
             'fields': ('day', 'category')
         }),
         ('Тип контента', {
-            'fields': ('content_type', 'video', 'photo', 'gif', 'caption')
+            'fields': ('content_type', 'photo', 'gif', 'caption')
         }),
         ('Дополнительная информация', {
             'fields': ('sequence_number',)
@@ -45,7 +45,7 @@ class UnpaidUserContentAdmin(admin.ModelAdmin):
             'fields': ('day',)
         }),
         ('Тип контента', {
-            'fields': ('content_type', 'video', 'photo', 'gif', 'caption')
+            'fields': ('content_type', 'photo', 'gif', 'caption')
         }),
         ('Дополнительная информация', {
             'fields': ('sequence_number',)
