@@ -8,7 +8,7 @@ import pytz
 import datetime
 
 from telegram_bot.models import PaidUser, FinishedUser, UserCalories
-from courses.models import Категории, Content, DailyContent
+from courses.models import Категории, Content, Mailing, Training
 from telegram_bot.loader import bot
 from telegram_bot.states import States
 
@@ -29,10 +29,9 @@ def send_daily_content(user):
     current_day = delta_days
 
     # Получаем контент для соответствующей категории и дня
-    daily_contents = DailyContent.objects.filter(
+    daily_contents = Mailing.objects.filter(
         category=matching_category,
         day=current_day,
-        **(Q(sequence_number=1) | Q(sequence_number=2))
     )
     # Отправляем контент пользователю через Telegram Bot API
     for content in daily_contents:
@@ -65,7 +64,7 @@ def check_for_daily_content(user, current_day):
         )
 
         if current_day != 0:
-            daily_contents = DailyContent.objects.filter(category=matching_category, day=current_day, sequence_number__gte=3)
+            daily_contents = Mailing.objects.filter(category=matching_category, day=current_day)
             if daily_contents:
                 user_calories = UserCalories.objects.get(user=user)
                 is_requested = getattr(user_calories, f'day{current_day}_requested')

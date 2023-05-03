@@ -4,7 +4,6 @@ from telebot import types
 
 from telegram_bot.loader import bot
 from telegram_bot.states import States
-from courses.models import Категории, Content, DailyContent
 from telegram_bot.models import PaidUser, UnpaidUser, UserCalories
 
 user_data = {}

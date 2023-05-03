@@ -4,7 +4,7 @@ from telegram_bot.loader import bot
 from telegram_bot.states import States
 
 
-from courses.models import Категории, Content, DailyContent
+from courses.models import Категории, Content, Mailing, Training
 from telegram_bot.models import PaidUser, UnpaidUser, UserCalories
 
 
@@ -26,7 +26,7 @@ def get_courses(message: Message):
         delta_days = (timezone.now().date() - user.paid_day).days
         current_day = delta_days
 
-        daily_contents = DailyContent.objects.filter(category=matching_category, day=current_day, sequence_number__gte=3)
+        daily_contents = Training.objects.filter(category=matching_category, day=current_day)
         if daily_contents:
             # Отправляем контент пользователю через Telegram Bot API
             for content in daily_contents:

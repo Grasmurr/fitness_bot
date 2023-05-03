@@ -3,7 +3,7 @@ import time
 from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from telegram_bot.loader import bot
 from telegram_bot.models import UnpaidUser, PaidUser, UserCalories
-from courses.models import DailyContent
+from courses.models import Mailing
 
 
 @bot.message_handler(commands=['start'])
@@ -28,7 +28,7 @@ def start_message(message: Message):
         markup.add(button3)
         markup.add(button4)
 
-        daily_contents = DailyContent.objects.filter(day=0, sequence_number__lte=2)
+        daily_contents = Mailing.objects.filter(day=0)
 
         # Отправляем контент пользователю через Telegram Bot API
         for content in daily_contents:

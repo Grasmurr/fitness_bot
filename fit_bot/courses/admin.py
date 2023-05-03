@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Категории, DailyContent, UnpaidUserContent
+from .models import Категории, UnpaidUserContent, Mailing, Training
 from django.db.models import Count
 from telegram_bot.admin import my_admin_site
 
@@ -28,7 +28,11 @@ class BaseContentAdmin(admin.ModelAdmin):
         return queryset
 
 
-class DailyContentAdmin(BaseContentAdmin):
+class MailingAdmin(BaseContentAdmin):
+    ordering = ('category', 'day')
+
+
+class TrainingAdmin(BaseContentAdmin):
     ordering = ('category', 'day')
 
 
@@ -53,6 +57,7 @@ class UnpaidUserContentAdmin(admin.ModelAdmin):
         return queryset
 
 
-my_admin_site.register(DailyContent, DailyContentAdmin)
 my_admin_site.register(Категории)
 my_admin_site.register(UnpaidUserContent, UnpaidUserContentAdmin)
+my_admin_site.register(Mailing, MailingAdmin)
+my_admin_site.register(Training, TrainingAdmin)
