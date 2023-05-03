@@ -39,7 +39,7 @@ class MyAdminSite(admin.AdminSite):
     site_header = "Админ панель 21FIT"
 
 
-my_admin_site = MyAdminSite()
+my_admin_site = MyAdminSite(name='myadmin')
 my_admin_site.register(UnpaidUser, UnpaidUserAdmin)
 my_admin_site.register(PaidUser, PaidUserAdmin)
 my_admin_site.register(UserCalories, UserCaloriesAdmin)
