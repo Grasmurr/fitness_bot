@@ -37,6 +37,11 @@ class Категории(models.Model):
         return self.название
 
 
+class Video(models.Model):
+    name = models.CharField(max_length=300, blank=True, null=True)
+    video_file_id = models.CharField(max_length=300, blank=True, null=True)
+
+
 class Content(models.Model):
     TYPE_CHOICES = [
         ('V', 'Video'),
@@ -47,7 +52,7 @@ class Content(models.Model):
 
     day = models.IntegerField(null=True)
     content_type = models.CharField(default='T', max_length=1, choices=TYPE_CHOICES)
-    video = models.FileField(upload_to='videos/', validators=[FileExtensionValidator(allowed_extensions=['mp4', 'avi', 'mov'])], blank=True, null=True)
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
     photo = models.ImageField(upload_to='photos/', blank=True, null=True)
     gif = models.FileField(upload_to='gifs/', validators=[FileExtensionValidator(allowed_extensions=['gif'])], blank=True, null=True)
     video_file_id = models.CharField(max_length=300, blank=True, null=True)
@@ -76,8 +81,9 @@ class Training(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Тренировки')
 
 
-class UnpaidUserContent(Content):
 
+
+class UnpaidUserContent(Content):
     def __str__(self):
         return f"День {self.day} - {self.get_content_type_display()}, для неоплаченного пользователя - {self.unpaid_user.user_id}"
 
@@ -85,14 +91,10 @@ class UnpaidUserContent(Content):
         ordering = ['sequence_number']
 
 
+
 @receiver(post_save, sender=DailyContent)
 def upload_to_telegram(sender, instance=None, created=False, **kwargs):
     if created:
-        if instance.video:
-            with open(instance.video.path, 'rb') as video_file:
-                message = bot.send_video(chat_id=305378717, video=video_file)
-                instance.video_file_id = message.video.file_id
-                instance.video.delete(save=False)
 
         if instance.photo:
             with open(instance.photo.path, 'rb') as photo_file:
