@@ -52,7 +52,6 @@ class Content(models.Model):
 
     day = models.IntegerField(null=True)
     content_type = models.CharField(default='T', max_length=1, choices=TYPE_CHOICES)
-    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
     photo = models.ImageField(upload_to='photos/', blank=True, null=True)
     gif = models.FileField(upload_to='gifs/', validators=[FileExtensionValidator(allowed_extensions=['gif'])], blank=True, null=True)
     video_file_id = models.CharField(max_length=300, blank=True, null=True)
@@ -75,15 +74,16 @@ class DailyContent(Content):
 
 class Mailing(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Рассылка')
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
 
 
 class Training(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Тренировки')
-
-
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
 
 
 class UnpaidUserContent(Content):
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
     def __str__(self):
         return f"День {self.day} - {self.get_content_type_display()}, для неоплаченного пользователя - {self.unpaid_user.user_id}"
 
