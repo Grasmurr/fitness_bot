@@ -77,7 +77,7 @@ class DailyContent(Content):
 
 class Mailing(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Рассылка')
-    video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='+')
+    # video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='+')
 
 
 class Training(Content):
@@ -86,7 +86,7 @@ class Training(Content):
 
 
 class UnpaidUserContent(Content):
-    video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='+++')
+    # video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='+++')
     def __str__(self):
         return f"День {self.day} - {self.get_content_type_display()}, для неоплаченного пользователя - {self.unpaid_user.user_id}"
 
