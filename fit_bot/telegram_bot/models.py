@@ -45,7 +45,7 @@ class PaidUser(models.Model):
     пол = models.CharField(max_length=7, choices=GENDER_CHOICES, default='M')
     цель = models.CharField(max_length=12, choices=GOAL_CHOICES, default='G')
     место = models.CharField(max_length=3, choices=PLACE_CHOICES, default='H')
-    уровень = models.CharField(max_length=16, choices=LEVEL, default='P')
+    уровень = models.CharField(max_length=16, choices=LEVEL, default='N')
 
     def __str__(self):
         return f"{self.username} ({self.user})"

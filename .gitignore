@@ -3,3 +3,5 @@
 lib
 bin
 src
+fit_bot/telegram_bot/data/
+fit_bot/telegram_bot/support_bot/data

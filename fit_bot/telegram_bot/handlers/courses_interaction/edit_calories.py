@@ -67,22 +67,18 @@ def calories_info(message: Message):
                                   'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
     else:
         if user_id not in user_data:
-            # Создаем словарь для пользователя, если он еще не существует
             user_data[user_id] = {day: [0, 0, 0, []] for day in range(1, 22)}
 
         user_calories = user_data[user_id][current_day]
         daily_norm = user.calories
         total_snacks_calories = sum(user_calories[3])
-        remaining_calories = daily_norm - (
-                    user_calories[0] + user_calories[1] + user_calories[2] + total_snacks_calories)
+        total_calories = user_calories[0] + user_calories[1] + user_calories[2] + total_snacks_calories
+        remaining_calories = daily_norm - total_calories
 
-        snacks_text = ''
-        for i, snack_calories in enumerate(user_calories[3], start=1):
-            snacks_text += f"🍝 перекус №{i} - {snack_calories}\n"
-
-        text = (
-            f"🔥 Тебе можно съесть еще: {remaining_calories} ккал"
-        )
+        if remaining_calories <= 0:
+            text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше одать предпочтение овощам (например: огурцы, морковь, капуста, броколи)"
+        else:
+            text = f"🔥 Тебе можно съесть еще: {remaining_calories} ккал"
         bot.send_message(user_id, text)
 
 
@@ -224,17 +220,19 @@ def handle_new_calories(message):
                 if current_meal == 'snack':
                     user_calories[current_meal_index].append(new_calories)
                 else:
-                    user_calories[current_meal_index] = new_calories  # Обновление калорий для текущего приема пищи
+                    user_calories[current_meal_index] = new_calories
 
-                # Получаем объект UserCalories для текущего пользователя
                 user_calories_obj = UserCalories.objects.get(user=user)
 
-                # Обновляем атрибут дня для соответствующего дня и сохраняем изменения
                 day_attr = f'day{current_day}'
-                setattr(user_calories_obj, day_attr, sum(user_calories[:-1]) + sum(user_calories[-1]))
+                total_calories = sum(user_calories[:-1]) + sum(user_calories[-1])
+                setattr(user_calories_obj, day_attr, total_calories)
                 user_calories_obj.save()
 
-                text = "Количество калорий успешно обновлено!"
+                if total_calories > user.calories:
+                    text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше одать предпочтение овощам (например: огурцы, морковь, капуста, броколи)"
+                else:
+                    text = "Количество калорий успешно обновлено!"
                 bot.send_message(user_id, text)
 
             else:
