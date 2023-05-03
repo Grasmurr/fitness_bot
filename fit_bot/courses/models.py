@@ -82,14 +82,12 @@ class Training(Content):
 
 
 class UnpaidUserContent(Content):
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
     def __str__(self):
         return f"День {self.day} - {self.get_content_type_display()}, для неоплаченного пользователя - {self.unpaid_user.user_id}"
 
     class Meta:
         ordering = ['sequence_number']
-
-
-
 
 
 
