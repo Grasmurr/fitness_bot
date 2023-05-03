@@ -69,11 +69,11 @@ class DailyContent(Content):
 
 
 class Mailing(Content):
-    category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='daily_contents')
+    category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Рассылка')
 
 
 class Training(Content):
-    category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='daily_contents')
+    category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Тренировки')
 
 
 class UnpaidUserContent(Content):
