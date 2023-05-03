@@ -2,7 +2,7 @@ from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, R
 from telegram_bot.loader import bot
 from telegram_bot.filters.is_admin import IsAdminFilter
 from telegram_bot.states import States
-from courses.models import Категории
+from courses.models import Категории, Video
 from telegram_bot.models import PaidUser, UnpaidUser, FinishedUser
 from telegram_bot.handlers.mainmenu import paid_user_main_menu
 
@@ -18,9 +18,11 @@ def what(message: Message):
     admin_data[user_id]['state'] = States.MAILING
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     button1 = KeyboardButton('Рассылка')
-    button2 = KeyboardButton('Вернуться назад')
+    button2 = KeyboardButton('Загрузить видео')
+    button3 = KeyboardButton('Вернуться назад')
     markup.add(button1)
     markup.add(button2)
+    markup.add(button3)
     bot.send_message(chat_id=message.chat.id,
                      text='Это админ-панель! Пожалуйста, выберите что вы хотите сделать нажав на кнопку ниже',
                      reply_markup=markup)
@@ -52,6 +54,31 @@ def unpaid_mailing(message: Message):
 @bot.message_handler(func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.MAILING and message.text == 'Вернуться назад', is_admin=True)
 def back_home_from_mailing(message: Message):
     paid_user_main_menu(message)
+
+
+@bot.message_handler(func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.MAILING and message.text == 'Загрузить видео', is_admin=True)
+def upload(message: Message):
+    user_id = message.from_user.id
+    admin_data[user_id]['state'] = States.UPLOAD_VIDEO
+    bot.send_message(user_id, "Пожалуйста, загрузите видео")
+
+
+@bot.message_handler(content_types=['video'], func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.UPLOAD_VIDEO, is_admin=True)
+def handle_video_upload(message: Message):
+    user_id = message.from_user.id
+    video = message.video
+    video_file_id = video.file_id
+
+    # Получение названия видео (если оно было указано в подписи к видео)
+    video_name = message.caption if message.caption else "Без названия"
+
+    # Создание и сохранение объекта Video в базе данных
+    new_video = Video(name=video_name, video_file_id=video_file_id)
+    new_video.save()
+
+    # Возвращение пользователя в состояние MAILING и отправка сообщения об успешной загрузке видео
+    admin_data[user_id]['state'] = States.MAILING
+    bot.send_message(user_id, "Видео успешно загружено и сохранено")
 
 
 def create_categories_keyboard(for_unpaid=False):
