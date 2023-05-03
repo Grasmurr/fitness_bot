@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Категории, DailyContent, UnpaidUserContent
 from django.db.models import Count
+from telegram_bot.admin import my_admin_site
 
 
 class BaseContentAdmin(admin.ModelAdmin):
@@ -51,12 +52,6 @@ class UnpaidUserContentAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         return queryset
 
-
-class MyAdminSite(admin.AdminSite):
-    site_header = "Админ панель 21FIT"
-
-
-my_admin_site = MyAdminSite(name='myadmin')
 
 my_admin_site.register(DailyContent, DailyContentAdmin)
 my_admin_site.register(Категории)
