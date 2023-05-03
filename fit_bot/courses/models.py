@@ -41,6 +41,9 @@ class Video(models.Model):
     name = models.CharField(max_length=300, blank=True, null=True)
     video_file_id = models.CharField(max_length=300, blank=True, null=True)
 
+    class Meta:
+        abstract = True
+
 
 class Content(models.Model):
     TYPE_CHOICES = [
@@ -79,7 +82,7 @@ class Mailing(Content):
 
 class Training(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Тренировки')
-    video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='++')
+    # video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='++')
 
 
 class UnpaidUserContent(Content):
