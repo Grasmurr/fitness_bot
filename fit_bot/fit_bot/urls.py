@@ -15,8 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from fit_bot.courses.admin import my_admin_site
-from fit_bot.telegram_bot.admin import my_admin_site as telegram_bot_admin
+from courses.admin import my_admin_site
+from telegram_bot.admin import my_admin_site as telegram_bot_admin
 
 urlpatterns = [
     path("admin/", admin.site.urls),
