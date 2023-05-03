@@ -79,6 +79,7 @@ def handle_video_upload(message: Message):
     # Возвращение пользователя в состояние MAILING и отправка сообщения об успешной загрузке видео
     admin_data[user_id]['state'] = States.MAILING
     bot.send_message(user_id, "Видео успешно загружено и сохранено")
+    what(message)
 
 
 def create_categories_keyboard(for_unpaid=False):
