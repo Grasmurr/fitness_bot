@@ -79,6 +79,8 @@ class Mailing(Content):
 
 class Training(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='Тренировки')
+    video = models.ForeignKey(Video, on_delete=models.SET_NULL, blank=True, null=True, related_name='+')
+
 
 
 class UnpaidUserContent(Content):
