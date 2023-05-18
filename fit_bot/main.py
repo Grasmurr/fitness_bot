@@ -11,7 +11,6 @@ from telegram_bot.tasks import run_scheduler
 
 
 if __name__ == '__main__':
-
     while True:
         try:
             start_bot()
