@@ -102,9 +102,11 @@ def create_calories_add_or_remove_menu():
     markup = types.InlineKeyboardMarkup()
 
     button_add_remove = types.InlineKeyboardButton("Ввести новое количество", callback_data="add_remove")
+    button_add_product = types.InlineKeyboardButton("Добавить продукт", callback_data="add_product")
     button_back = types.InlineKeyboardButton("Назад", callback_data="back")
 
     markup.row(button_add_remove)
+    markup.row(button_add_product)
     markup.row(button_back)
 
     return markup
@@ -153,6 +155,13 @@ def handle_meal_callback(call):
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
 
 
+@bot.callback_query_handler(func=lambda call: call.data == "add_product")
+def handle_add_product_callback(call):
+    user_data[call.from_user.id]['state'] = States.CHOOSE_PRODUCT
+    text = "Введите название продукта:"
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id)
+
+
 @bot.callback_query_handler(func=lambda call: call.data in ["add_remove", "back"])
 def handle_add_remove_callback(call):
     if user_data[call.from_user.id]['state'] == States.ADD_REMOVE_CALORIES:
@@ -189,6 +198,103 @@ def handle_add_remove_callback(call):
             markup = None
 
         bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
+
+
+def search_product(product_name):
+    return ['Морковка - 30', 'Картошка - 50', 'Биг Мак - 350', 'Чизбургер - 150', 'Вода - 0']
+
+
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ["change_product", "cancel_product"])
+def handle_change_cancel_product_callback(call):
+    user_id = call.from_user.id
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+
+    if call.data == "change_product":
+        user_data[user_id]['state'] = States.CHOOSE_PRODUCT
+        bot.edit_message_text("Введите название продукта:", chat_id, message_id)
+    else:
+        user_data[user_id]['state'] = States.START
+        bot.edit_message_text("Отменено", chat_id, message_id)
+
+
+@bot.message_handler(func=lambda message: message.from_user.id in user_data and user_data[message.from_user.id]['state'] == States.CHOOSE_PRODUCT)
+def handle_product_name(message):
+    user_data[message.from_user.id]['state'] = States.CHOOSE_PRODUCT
+    product_name = message.text
+
+    product_options = search_product(product_name)  # Запустите функцию search_product
+
+    user_data[message.from_user.id]['product_options'] = product_options
+
+    text = "Выберите один из предложенных вариантов:\n\n"
+    for i, option in enumerate(product_options, 1):
+        text += f"{i}. {option}\n"
+
+    markup = types.InlineKeyboardMarkup()
+    for i in range(1, len(product_options) + 1):
+        button = types.InlineKeyboardButton(str(i), callback_data=f"choose_product_{i}")
+        markup.add(button)
+    button_change = types.InlineKeyboardButton("Изменить", callback_data="change_product")
+    button_cancel = types.InlineKeyboardButton("Отмена", callback_data="cancel_product")
+    markup.add(button_change, button_cancel)
+
+    bot.send_message(message.chat.id, text, reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("choose_product_"))
+def handle_choose_product_callback(call):
+
+    user_id = call.from_user.id
+    if user_id not in user_data:
+        user_data[user_id] = {}
+
+    chosen_option = int(call.data.split("_")[-1]) - 1
+    product = user_data[user_id]['product_options'][chosen_option]
+    calories = int(product.split()[-1])  # Извлеките калории из строки продукта
+
+    # Определение индекса приема пищи
+    meal_index = {
+        "breakfast": 0,
+        "lunch": 1,
+        "dinner": 2,
+        "snack": 3,
+    }
+
+    # Возвращает текущее состояние приема пищи, которое было выбрано в handle_meal_callback
+    current_meal = user_data[user_id]['current_meal']
+    current_meal_index = meal_index[current_meal]
+
+    user = PaidUser.objects.get(user=user_id)
+    delta_days = (timezone.now().date() - user.paid_day).days
+    current_day = delta_days
+
+    user_calories = user_data[user_id][current_day]
+    if current_meal == 'snack':
+        user_calories[current_meal_index].append(calories)
+    else:
+        user_calories[current_meal_index] = calories
+
+    user_calories_obj = UserCalories.objects.get(user=user)
+
+    day_attr = f'day{current_day}'
+    total_calories = sum(user_calories[:-1]) + sum(user_calories[-1])
+    setattr(user_calories_obj, day_attr, total_calories)
+    user_calories_obj.save()
+
+    if total_calories > user.calories:
+        text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше отдать предпочтение овощам (например: огурцы, морковь, капуста, брокколи)"
+    else:
+        text = "Количество калорий успешно обновлено!"
+    bot.send_message(user_id, text)
+
+    # Возвращаемся к начальному состоянию
+    user_data[call.from_user.id]['state'] = States.START
+
+
+
+
 
 
 # Обработчик сообщений для ввода нового количества калорий
@@ -240,3 +346,4 @@ def handle_new_calories(message):
                     bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
             else:
                 bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
+

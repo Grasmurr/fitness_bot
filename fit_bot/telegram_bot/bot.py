@@ -13,13 +13,11 @@ execute_from_command_line(["manage.py", "check"])
 from . import handlers
 
 from telegram_bot.filters.is_admin import IsAdminFilter
-from telegram_bot.tasks import start_scheduler
 
 bot.add_custom_filter(IsAdminFilter(bot))
 
 
 def start_bot():
-    start_scheduler()
     bot.polling(none_stop=True)
     # while True:
     #     try:

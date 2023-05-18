@@ -22,3 +22,5 @@ class States(Enum):
     CHOOSING_MAILING_CATEGORY = 'choosing_mailing_category'
     ENTER_TEXT_FOR_MAILING = 'enter_text_for_mailing'
     UPLOAD_VIDEO = 'upload_video'
+    CHOOSE_PRODUCT = 'choose_product'
+    ASK_PRODUCT_NAME = 'ask_product_name'
