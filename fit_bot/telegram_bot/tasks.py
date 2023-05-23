@@ -1,3 +1,5 @@
+import threading
+
 import schedule
 import time
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
@@ -19,7 +21,6 @@ def send_daily_content():
     paid_users = PaidUser.objects.all()
 
     for user in paid_users:
-
 
         # Находим соответствующую категорию
         # контента на основе характеристик пользователя
@@ -54,11 +55,10 @@ def send_daily_content():
                 bot.send_document(chat_id=user.user, document=content.gif_file_id, caption=updated_caption)
 
 
-def check_calories(user):
+def check_calories():
     paid_users = PaidUser.objects.all()
 
     for user in paid_users:
-        check_for_daily_content(user)
         bot.send_message(chat_id=user.user, text='Дорогой участник курса! '
                                                  'Пожалуйста, не забывайте заполнять '
                                                  'количество калорий, которые вы за сегодня '
@@ -135,12 +135,22 @@ def change_calories_norm():
 
 
 schedule.every().day.at("09:00").do(send_daily_content)
-schedule.every().day.at("18:40").do(check_calories)
+schedule.every().day.at("18:00").do(check_calories)
 schedule.every().day.at("11:00").do(check_for_daily_content)
+
+# Запускаем планировщик в отдельном потоке
+
 
 
 def run_scheduler():
     while True:
-        schedule.run_pending()
+        try:
+            check_for_daily_content()
+            schedule.run_pending()
+        except Exception as e:
+            bot.send_message(305378717, f"Ошибка: {e}")
         time.sleep(1)
+
+
+scheduler_thread = threading.Thread(target=run_scheduler)
 

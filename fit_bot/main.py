@@ -7,14 +7,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 django.setup()
 
 from telegram_bot.bot import start_bot
-from telegram_bot.tasks import run_scheduler
+from telegram_bot.tasks import scheduler_thread
 
 
 if __name__ == '__main__':
     while True:
         try:
+            scheduler_thread.start()
             start_bot()
-            run_scheduler()
         except:
             time.sleep(1)
             continue

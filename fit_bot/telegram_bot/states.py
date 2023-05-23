@@ -24,3 +24,9 @@ class States(Enum):
     UPLOAD_VIDEO = 'upload_video'
     CHOOSE_PRODUCT = 'choose_product'
     ASK_PRODUCT_NAME = 'ask_product_name'
+    ADD_GRAMS = 'add_grams'
+    PRODUCT_ACTIONS = 'product_actions'
+    ADD_PRODUCT = 'add_product'
+    CHANGE_PRODUCT = 'change_product'
+    CHANGE_GRAMS = 'change_grams'
+

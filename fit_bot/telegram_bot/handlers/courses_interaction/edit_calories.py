@@ -1,12 +1,70 @@
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from django.utils import timezone
 from telebot import types
+import re
+import csv
+from collections import Counter
 
 from telegram_bot.loader import bot
 from telegram_bot.states import States
 from telegram_bot.models import PaidUser, UnpaidUser, UserCalories
 
 user_data = {}
+
+
+def preprocess(text):
+    # Приводим к нижнему регистру, удаляем специальные символы и токенизируем
+    return re.findall(r'\b\w+\b', text.lower())
+
+
+# Открываем и читаем файл, а также сохраняем его данные
+with open('telegram_bot/handlers/courses_interaction/all_products.csv', newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    dishes_data = [row for row in reader]
+    dishes_name = [row['Title'] for row in dishes_data]
+
+# Токенизируем блюда для сравнения схожести
+tokenized_dishes = [preprocess(dish) for dish in dishes_name]
+
+# Функция для вычисления коэффициента Жаккара между двумя множествами
+def jaccard_similarity(set1, set2):
+    intersection = len(set1 & set2)
+    union = len(set1 | set2)
+    return intersection / union if union != 0 else 0
+
+# Функция для поиска пяти наиболее похожих блюд на основе ввода пользователя
+def find_top5_similar_dishes(user_input):
+    tokenized_input = preprocess(user_input)
+    input_set = set(tokenized_input)
+    similarities = [jaccard_similarity(input_set, set(dish)) for dish in tokenized_dishes]
+    top5_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:5]
+    top5_dishes = [dishes_name[i] for i in top5_indices]
+    return top5_dishes
+
+
+# Функция для расчета пищевой ценности на основе индекса блюда и веса в граммах
+def calculate_nutrients(top5_dishes, right_dish_index, grams):
+    # Находим выбранное блюдо по индексу
+    chosen_dish_name = top5_dishes[right_dish_index - 1]
+
+    # Находим данные о блюде в базе по названию
+    chosen_dish_data = next(dish for dish in dishes_data if dish['Title'] == chosen_dish_name)
+
+    # Рассчитываем пищевую ценность на основе веса в граммах
+    calories = float(chosen_dish_data['Calories']) * grams / 100
+    proteins = float(chosen_dish_data['Proteins']) * grams / 100
+    fats = float(chosen_dish_data['Fats']) * grams / 100
+    carbohydrates = float(chosen_dish_data['Carbohydrates']) * grams / 100
+
+    # Возвращаем рассчитанную пищевую ценность
+    return {
+        'Title': chosen_dish_name,
+        'Calories': calories,
+        'Proteins': proteins,
+        'Fats': fats,
+        'Carbohydrates': carbohydrates
+    }
+
 
 
 @bot.message_handler(func=lambda message: message.text == 'Мой дневник калорий 📆')
@@ -204,8 +262,6 @@ def search_product(product_name):
     return ['Морковка - 30', 'Картошка - 50', 'Биг Мак - 350', 'Чизбургер - 150', 'Вода - 0']
 
 
-
-
 @bot.callback_query_handler(func=lambda call: call.data in ["change_product", "cancel_product"])
 def handle_change_cancel_product_callback(call):
     user_id = call.from_user.id
@@ -220,12 +276,58 @@ def handle_change_cancel_product_callback(call):
         bot.edit_message_text("Отменено", chat_id, message_id)
 
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('product'))
+def handle_product_callback(call):
+    user_id = call.from_user.id
+    # Обработка выбора продукта, получение ID продукта и сохранение его в данных пользователя
+    product_id = int(call.data.split('_')[1])
+    user_data[user_id]['current_product'] = product_id
+
+    text = "Введите количество грамм продукта."
+    bot.send_message(user_id, text)
+    user_data[user_id]['state'] = States.ADD_GRAMS
+
+
+@bot.message_handler(func=lambda message: message.from_user.id in user_data and user_data[message.from_user.id]['state'] == States.ADD_GRAMS)
+def handle_grams_input(message):
+    user_id = message.from_user.id
+    if message.text.isdigit():
+        grams = int(message.text)
+        # Получаем ID продукта, который пользователь выбрал
+        product_id = user_data[user_id]['current_product']
+        # Получаем продукт
+        product = user_data[message.from_user.id]['product_options'][product_id - 1]
+        # Вычисляем калории с учетом введенного количества грамм
+        calories = calculate_nutrients(user_data[message.from_user.id]['product_options'], product_id, grams)
+
+        # сохраняем продукт и его калории в данных пользователя
+        if 'products' not in user_data[user_id]:
+            user_data[user_id]['products'] = {}
+        user_data[user_id]['products'][product_id] = {'name': product, 'calories': calories}
+
+
+        # генерируем текст с текущим списком продуктов
+        text = "Вы добавляете следующие продукты:\n"
+        for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
+            text += f"{i}. {product_data['name']}, {product_data['calories']['Calories']} ккал\n"
+
+        # генерируем клавиатуру с кнопками "сохранить", "добавить еще" и "изменить продукт"
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        save_button = types.InlineKeyboardButton("Сохранить", callback_data="save")
+        add_more_button = types.InlineKeyboardButton("Добавить еще", callback_data="add_more")
+        change_button = types.InlineKeyboardButton("Изменить продукт", callback_data="change")
+        keyboard.add(save_button, add_more_button, change_button)
+
+        bot.send_message(user_id, text, reply_markup=keyboard)
+        user_data[user_id]['state'] = States.PRODUCT_ACTIONS
+
+
 @bot.message_handler(func=lambda message: message.from_user.id in user_data and user_data[message.from_user.id]['state'] == States.CHOOSE_PRODUCT)
 def handle_product_name(message):
     user_data[message.from_user.id]['state'] = States.CHOOSE_PRODUCT
     product_name = message.text
 
-    product_options = search_product(product_name)  # Запустите функцию search_product
+    product_options = find_top5_similar_dishes(product_name)  # Запустите функцию search_product
 
     user_data[message.from_user.id]['product_options'] = product_options
 
@@ -235,17 +337,16 @@ def handle_product_name(message):
 
     markup = types.InlineKeyboardMarkup()
     for i in range(1, len(product_options) + 1):
-        button = types.InlineKeyboardButton(str(i), callback_data=f"choose_product_{i}")
+        button = types.InlineKeyboardButton(str(i), callback_data=f"product_{i}")
         markup.add(button)
     button_change = types.InlineKeyboardButton("Изменить", callback_data="change_product")
     button_cancel = types.InlineKeyboardButton("Отмена", callback_data="cancel_product")
     markup.add(button_change, button_cancel)
-
     bot.send_message(message.chat.id, text, reply_markup=markup)
+
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("choose_product_"))
 def handle_choose_product_callback(call):
-
     user_id = call.from_user.id
     if user_id not in user_data:
         user_data[user_id] = {}
@@ -291,9 +392,6 @@ def handle_choose_product_callback(call):
 
     # Возвращаемся к начальному состоянию
     user_data[call.from_user.id]['state'] = States.START
-
-
-
 
 
 
@@ -346,4 +444,169 @@ def handle_new_calories(message):
                     bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
             else:
                 bot.send_message(user_id, 'Пожалуйста, введите число, больше 0')
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['save', 'add_more', 'change'])
+def handle_product_actions_callback(call):
+    user_id = call.from_user.id
+    action = call.data
+
+    if action == 'save':
+        meal_index = {
+            "breakfast": 0,
+            "lunch": 1,
+            "dinner": 2,
+            "snack": 3,
+        }
+        total_calories = sum(product_data['calories']['Calories'] for product_data in user_data[user_id]['products'].values())
+        user = PaidUser.objects.get(user=user_id)
+        delta_days = (timezone.now().date() - user.paid_day).days
+        current_day = delta_days
+        # Здесь нужно обновить данные о калориях пользователя
+        # Возвращает текущее состояние приема пищи, которое было выбрано в handle_meal_callback
+        current_meal = user_data[user_id]['current_meal']
+        current_meal_index = meal_index[current_meal]
+
+        user_calories = user_data[user_id][current_day]
+        if current_meal == 'snack':
+            user_calories[current_meal_index].append(total_calories)
+        else:
+            user_calories[current_meal_index] = total_calories
+
+        # Обработка кнопки "Сохранить"
+
+        user_calories_obj = UserCalories.objects.get(user=user)
+
+        day_attr = f'day{current_day}'
+        setattr(user_calories_obj, day_attr, total_calories)
+        user_calories_obj.save()
+
+
+        bot.send_message(user_id, 'Количество калорий успешно сохранено!')
+    elif action == 'add_more':
+        # Обработка кнопки "Добавить еще"
+        bot.send_message(user_id, 'Введите название следующего продукта.')
+        user_data[user_id]['state'] = States.CHOOSE_PRODUCT
+    elif action == 'change':
+        # Обработка кнопки "Изменить продукт"
+        text = "Выберите продукт, который вы хотите изменить:\n"
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
+            button_text = f"{i}. {product_data['name']}"  # можно использовать только i, если название продукта слишком длинное
+            button = types.InlineKeyboardButton(button_text, callback_data=f'change_{product_id}')
+            keyboard.add(button)
+
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
+                              reply_markup=keyboard)
+        user_data[user_id]['state'] = States.CHANGE_PRODUCT
+
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('change_') and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
+def handle_selected_product_callback(call):
+
+    user_id = call.from_user.id
+    product_id = int(call.data.split('_')[1])
+
+    # Сохраняем текущий продукт для изменения
+    user_data[user_id]['current_product'] = product_id
+
+    # Генерируем клавиатуру с кнопками "назад", "удалить" и "изменить"
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    back_button = types.InlineKeyboardButton("Назад", callback_data="back")
+    delete_button = types.InlineKeyboardButton("Удалить продукт", callback_data=f'delete_{product_id}')
+    change_button = types.InlineKeyboardButton("Изменить количество грамм", callback_data=f'change_grams_{product_id}')
+    keyboard.add(back_button, delete_button, change_button)
+
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Что вы хотите сделать с этим продуктом?', reply_markup=keyboard)
+
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'back' and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
+def handle_back_callback(call):
+    user_id = call.from_user.id
+    # генерируем текст с текущим списком продуктов
+    text = "Вы добавляете следующие продукты:\n"
+    for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
+        text += f"{i}. {product_data['name']}, {product_data['calories']['Calories']} ккал\n"
+
+    # генерируем клавиатуру с кнопками "сохранить", "добавить еще" и "изменить продукт"
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    save_button = types.InlineKeyboardButton("Сохранить", callback_data="save")
+    add_more_button = types.InlineKeyboardButton("Добавить еще", callback_data="add_more")
+    change_button = types.InlineKeyboardButton("Изменить продукт", callback_data="change")
+    keyboard.add(save_button, add_more_button, change_button)
+
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text, reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('delete_')  and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
+def handle_delete_product_callback(call):
+    user_id = call.from_user.id
+    product_id = int(call.data.split('_')[1])
+
+    # удаляем продукт
+    del user_data[user_id]['products'][product_id]
+
+    # генерируем текст с текущим списком продуктов
+    text = "Вы добавляете следующие продукты:\n"
+    for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
+        text += f"{i}. {product_data['name']}, {product_data['calories']} ккал\n"
+
+    # генерируем клавиатуру с кнопками "сохранить", "добавить еще" и "изменить продукт"
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    save_button = types.InlineKeyboardButton("Сохранить", callback_data="save")
+    add_more_button = types.InlineKeyboardButton("Добавить еще", callback_data="add_more")
+    change_button = types.InlineKeyboardButton("Изменить продукт", callback_data="change")
+    keyboard.add(save_button, add_more_button, change_button)
+
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text, reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('change_grams_'))
+def handle_change_grams_callback(call):
+    user_id = call.from_user.id
+    product_id = int(call.data.split('_')[2])
+
+    # сохраняем ID продукта, количество грамм которого пользователь хочет изменить
+    user_data[user_id]['current_product'] = product_id
+
+    text = "Введите новое количество грамм продукта."
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text)
+    user_data[user_id]['state'] = States.CHANGE_GRAMS
+
+
+@bot.message_handler(func=lambda message: message.from_user.id in user_data and user_data[message.from_user.id]['state'] == States.CHANGE_GRAMS)
+def handle_change_grams_input(message):
+    user_id = message.from_user.id
+    if message.text.isdigit():
+        grams = int(message.text)
+        product_id = user_data[user_id]['current_product']
+        product = user_data[user_id]['products'][product_id]
+
+        # Вычисляем калории с учетом нового введенного количества грамм
+        calories = calculate_nutrients(user_data[user_id]['product_options'], product_id, grams)
+        product['calories'] = calories
+
+        # генерируем текст с текущим списком продуктов
+        text = "Вы добавляете следующие продукты:\n"
+        for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
+            text += f"{i}. {product_data['name']}, {product_data['calories']} ккал\n"
+
+        # генерируем клавиатуру с кнопками "сохранить", "добавить еще" и "изменить продукт"
+        keyboard = types.InlineKeyboardMarkup(row_width=2)
+        save_button = types.InlineKeyboardButton("Сохранить", callback_data="save")
+        add_more_button = types.InlineKeyboardButton("Добавить еще", callback_data="add_more")
+        change_button = types.InlineKeyboardButton("Изменить продукт", callback_data="change")
+        keyboard.add(save_button, add_more_button, change_button)
+
+        bot.send_message(user_id, text, reply_markup=keyboard)
+        user_data[user_id]['state'] = States.PRODUCT_ACTIONS
+
+
+
+
+
+
+
 

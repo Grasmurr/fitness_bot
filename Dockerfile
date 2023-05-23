@@ -20,6 +20,8 @@ WORKDIR /app/fit_bot
 ENV PYTHONPATH /app:$PYTHONPATH
 ENV DJANGO_SETTINGS_MODULE=fit_bot.settings
 ENV PORT 8000
+ENV TZ=Europe/Moscow
+
 
 # Запускаю приложение
 CMD gunicorn fit_bot.wsgi:application --bind localhost:$PORT

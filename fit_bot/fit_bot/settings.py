@@ -126,15 +126,3 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SETTINGS_MODULE = os.environ.get('DJANGO_SETTINGS_MODULE')
-
-CELERY_BEAT_SCHEDULE = {
-    'check_and_send_content_every_minute': {
-        'task': 'telegram_bot.tasks.check_and_send_content',
-        'schedule': crontab(minute='*/1'),
-    },
-    'change_calories_norm_every_24_hours': {
-        'task': 'telegram_bot.tasks.change_calories_norm',
-        'schedule': crontab(hour=0, minute=0),  # выполняется каждый день в 00:00
-    },
-}
-
