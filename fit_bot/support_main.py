@@ -10,6 +10,7 @@ from telegram_bot.support_bot.bot import start_support_bot
 
 
 if __name__ == '__main__':
+
     while True:
         try:
             start_support_bot()

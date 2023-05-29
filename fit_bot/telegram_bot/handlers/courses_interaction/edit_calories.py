@@ -66,7 +66,6 @@ def calculate_nutrients(top5_dishes, right_dish_index, grams):
     }
 
 
-
 @bot.message_handler(func=lambda message: message.text == 'Мой дневник калорий 📆')
 def handle_update_calories(message):
     user_id = message.from_user.id
@@ -394,7 +393,6 @@ def handle_choose_product_callback(call):
     user_data[call.from_user.id]['state'] = States.START
 
 
-
 # Обработчик сообщений для ввода нового количества калорий
 @bot.message_handler(func=lambda message: message.from_user.id in user_data)
 def handle_new_calories(message):
@@ -481,7 +479,6 @@ def handle_product_actions_callback(call):
         setattr(user_calories_obj, day_attr, total_calories)
         user_calories_obj.save()
 
-
         bot.send_message(user_id, 'Количество калорий успешно сохранено!')
     elif action == 'add_more':
         # Обработка кнопки "Добавить еще"
@@ -499,7 +496,6 @@ def handle_product_actions_callback(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text,
                               reply_markup=keyboard)
         user_data[user_id]['state'] = States.CHANGE_PRODUCT
-
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('change_') and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
@@ -521,7 +517,6 @@ def handle_selected_product_callback(call):
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Что вы хотите сделать с этим продуктом?', reply_markup=keyboard)
 
 
-
 @bot.callback_query_handler(func=lambda call: call.data == 'back' and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
 def handle_back_callback(call):
     user_id = call.from_user.id
@@ -540,7 +535,7 @@ def handle_back_callback(call):
     bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=text, reply_markup=keyboard)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('delete_')  and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('delete_') and call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.CHANGE_PRODUCT)
 def handle_delete_product_callback(call):
     user_id = call.from_user.id
     product_id = int(call.data.split('_')[1])
@@ -602,11 +597,4 @@ def handle_change_grams_input(message):
 
         bot.send_message(user_id, text, reply_markup=keyboard)
         user_data[user_id]['state'] = States.PRODUCT_ACTIONS
-
-
-
-
-
-
-
 

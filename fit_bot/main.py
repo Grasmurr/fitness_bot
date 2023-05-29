@@ -11,9 +11,10 @@ from telegram_bot.tasks import scheduler_thread
 
 
 if __name__ == '__main__':
+    scheduler_thread.start()
+
     while True:
         try:
-            scheduler_thread.start()
             start_bot()
         except:
             time.sleep(1)

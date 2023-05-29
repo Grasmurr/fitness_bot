@@ -141,7 +141,6 @@ schedule.every().day.at("11:00").do(check_for_daily_content)
 # Запускаем планировщик в отдельном потоке
 
 
-
 def run_scheduler():
     while True:
         try:
