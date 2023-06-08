@@ -76,7 +76,7 @@ def get_age(message: Message):
         markup = ReplyKeyboardMarkup()
         button1 = KeyboardButton('Погнали!')
         markup.add(button1)
-        bot.send_voice(chat_id, 'AgACAgIAAxkBAAMhZIICQ7oDNVB64dzT_URs8HLO96IAAjPLMRu1rxFIwmwTchHLlJMBAAMCAAN5AAMvBA',
+        bot.send_voice(chat_id, 'AwACAgIAAxkBAAMxZIIFR-7JoIy9uE1RX4AYTdcsEYUAAkMsAALdyQABSEj14zqmpCufLwQ',
                        caption='📞🔥 Ибрат на связи, скорее слушайте аудио!',
                        reply_markup=markup)
     else:
@@ -223,11 +223,11 @@ def describe_problem(message: Message):
     bot.set_state(user_id, States.START, chat_id)
 
 
-@bot.message_handler(content_types=['voice'])
-def handle_voice(message):
-    file_id = message.voice.file_id
-    bot.send_message(message.from_user.id, f"Received voice with id: {file_id}")
-    bot.send_voice(message.chat.id, file_id)
+# @bot.message_handler(content_types=['voice'])
+# def handle_voice(message):
+#     file_id = message.voice.file_id
+#     bot.send_message(message.from_user.id, f"Received voice with id: {file_id}")
+#     bot.send_voice(message.chat.id, file_id)
 #
 # @bot.message_handler(content_types=['photo'])
 # def handle_photo(message):
