@@ -2,6 +2,8 @@ from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, R
 from django.utils import timezone
 from telebot import types
 import re
+import requests
+import json
 import csv
 from collections import Counter
 
@@ -18,52 +20,62 @@ def preprocess(text):
 
 
 # Открываем и читаем файл, а также сохраняем его данные
-with open('telegram_bot/handlers/courses_interaction/all_products.csv', newline='', encoding='utf-8') as csvfile:
-    reader = csv.DictReader(csvfile)
-    dishes_data = [row for row in reader]
-    dishes_name = [row['Title'] for row in dishes_data]
+def search_food(query):
+    url = "https://fs2.tvoydnevnik.com/api2/food_search/search"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    data = {
+        "jwt": "false",
+        "DeviceSize": "XSmall",
+        "DeviceSizeDiary": "XSmall",
+        "query[count_on_page]": 5,
+        "query[page]": 1,
+        "query[name]": query,
+        "platformId": 101,
+    }
 
-# Токенизируем блюда для сравнения схожести
-tokenized_dishes = [preprocess(dish) for dish in dishes_name]
+    response = requests.post(url, headers=headers, data=data)
+    response_dict = json.loads(response.text)
 
-# Функция для вычисления коэффициента Жаккара между двумя множествами
-def jaccard_similarity(set1, set2):
-    intersection = len(set1 & set2)
-    union = len(set1 | set2)
-    return intersection / union if union != 0 else 0
+    dish_list = []
+    for i, food_item in enumerate(response_dict["result"]["list"]):
+        name = food_item['food']['name']
+        nutrients = food_item['food']['nutrientsShort']
+        dish_list.append((name, nutrients))
 
-# Функция для поиска пяти наиболее похожих блюд на основе ввода пользователя
-def find_top5_similar_dishes(user_input):
-    tokenized_input = preprocess(user_input)
-    input_set = set(tokenized_input)
-    similarities = [jaccard_similarity(input_set, set(dish)) for dish in tokenized_dishes]
-    top5_indices = sorted(range(len(similarities)), key=lambda i: similarities[i], reverse=True)[:5]
-    top5_dishes = [dishes_name[i] for i in top5_indices]
-    return top5_dishes
+    return dish_list
+
+
+def get_dish_by_number(dish_list, number):
+    if 0 <= number < len(dish_list):
+        return dish_list[number]
+    else:
+        return None
 
 
 # Функция для расчета пищевой ценности на основе индекса блюда и веса в граммах
-def calculate_nutrients(top5_dishes, right_dish_index, grams):
-    # Находим выбранное блюдо по индексу
-    chosen_dish_name = top5_dishes[right_dish_index - 1]
-
-    # Находим данные о блюде в базе по названию
-    chosen_dish_data = next(dish for dish in dishes_data if dish['Title'] == chosen_dish_name)
-
-    # Рассчитываем пищевую ценность на основе веса в граммах
-    calories = float(chosen_dish_data['Calories']) * grams / 100
-    proteins = float(chosen_dish_data['Proteins']) * grams / 100
-    fats = float(chosen_dish_data['Fats']) * grams / 100
-    carbohydrates = float(chosen_dish_data['Carbohydrates']) * grams / 100
-
-    # Возвращаем рассчитанную пищевую ценность
-    return {
-        'Title': chosen_dish_name,
-        'Calories': calories,
-        'Proteins': proteins,
-        'Fats': fats,
-        'Carbohydrates': carbohydrates
-    }
+# def calculate_nutrients(top5_dishes, right_dish_index, grams):
+#     # Находим выбранное блюдо по индексу
+#     chosen_dish_name = top5_dishes[right_dish_index - 1]
+#
+#     # Находим данные о блюде в базе по названию
+#     chosen_dish_data = next(dish for dish in dishes_data if dish['Title'] == chosen_dish_name)
+#
+#     # Рассчитываем пищевую ценность на основе веса в граммах
+#     calories = float(chosen_dish_data['Calories']) * grams / 100
+#     proteins = float(chosen_dish_data['Proteins']) * grams / 100
+#     fats = float(chosen_dish_data['Fats']) * grams / 100
+#     carbohydrates = float(chosen_dish_data['Carbohydrates']) * grams / 100
+#
+#     # Возвращаем рассчитанную пищевую ценность
+#     return {
+#         'Title': chosen_dish_name,
+#         'Calories': calories,
+#         'Proteins': proteins,
+#         'Fats': fats,
+#         'Carbohydrates': carbohydrates
+#     }
 
 
 @bot.message_handler(func=lambda message: message.text == 'Мой дневник калорий 📆')
@@ -90,7 +102,7 @@ def handle_update_calories(message):
         daily_norm = user.calories
 
         total_snacks_calories = sum(user_calories[3])
-        remaining_calories = daily_norm - (user_calories[0] + user_calories[1] + user_calories[2] + total_snacks_calories)
+        remaining_calories = round(daily_norm - (user_calories[0] + user_calories[1] + user_calories[2] + total_snacks_calories), 1)
 
         snacks_text = ''
         for i, snack_calories in enumerate(user_calories[3], start=1):
@@ -297,7 +309,7 @@ def handle_grams_input(message):
         # Получаем продукт
         product = user_data[message.from_user.id]['product_options'][product_id - 1]
         # Вычисляем калории с учетом введенного количества грамм
-        calories = calculate_nutrients(user_data[message.from_user.id]['product_options'], product_id, grams)
+        calories = get_dish_by_number(user_data[message.from_user.id]['product_options'], product_id)
 
         # сохраняем продукт и его калории в данных пользователя
         if 'products' not in user_data[user_id]:
@@ -326,7 +338,7 @@ def handle_product_name(message):
     user_data[message.from_user.id]['state'] = States.CHOOSE_PRODUCT
     product_name = message.text
 
-    product_options = find_top5_similar_dishes(product_name)  # Запустите функцию search_product
+    product_options = search_food(product_name)  # Запустите функцию search_product
 
     user_data[message.from_user.id]['product_options'] = product_options
 
@@ -433,7 +445,10 @@ def handle_new_calories(message):
                     user_calories_obj.save()
 
                     if total_calories > user.calories:
-                        text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от твоего питания, поэтому желательно ничего больше за сегодня не ешь, если очень тяжело, то лучше отдать предпочтение овощам (например: огурцы, морковь, капуста, брокколи)"
+                        text = "❗️Ты переел(а) свою норму ккал, твой результат на 80% зависит от" \
+                               " твоего питания, поэтому желательно ничего больше " \
+                               "за сегодня не ешь, если очень тяжело, то лучше отдать" \
+                               " предпочтение овощам (например: огурцы, морковь, капуста, брокколи)"
                     else:
                         text = "Количество калорий успешно обновлено!"
                     bot.send_message(user_id, text)
@@ -461,7 +476,8 @@ def handle_product_actions_callback(call):
         delta_days = (timezone.now().date() - user.paid_day).days
         current_day = delta_days
         # Здесь нужно обновить данные о калориях пользователя
-        # Возвращает текущее состояние приема пищи, которое было выбрано в handle_meal_callback
+        # Возвращает текущее состояние приема пищи,
+        # которое было выбрано в handle_meal_callback
         current_meal = user_data[user_id]['current_meal']
         current_meal_index = meal_index[current_meal]
 
@@ -489,7 +505,8 @@ def handle_product_actions_callback(call):
         text = "Выберите продукт, который вы хотите изменить:\n"
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         for i, (product_id, product_data) in enumerate(user_data[user_id]['products'].items(), 1):
-            button_text = f"{i}. {product_data['name']}"  # можно использовать только i, если название продукта слишком длинное
+            button_text = f"{i}. {product_data['name']}"  # можно использовать только i,
+            # если название продукта слишком длинное
             button = types.InlineKeyboardButton(button_text, callback_data=f'change_{product_id}')
             keyboard.add(button)
 

@@ -42,6 +42,19 @@ services:
       - DJANGO_SETTINGS_MODULE=fit_bot.settings
     networks:
       - backend
+  warmup_bot:
+    build: .
+    restart: always
+    command: sh -c "python warmup_main.py & wait"
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+    environment:
+      - DB_HOST=db
+      - DJANGO_SETTINGS_MODULE=fit_bot.settings
+    networks:
+      - backend
   db:
     image: postgres:15
     hostname: db
