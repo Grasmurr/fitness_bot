@@ -33,7 +33,7 @@ def start_message(message: Message):
     if user_id not in user_data:
         user_data[user_id] = {'username': message.from_user.username}
     bot.set_state(user_id, States.enter_name, chat_id)
-    bot.send_photo(user_id, photo=open('..data/photos/2023-06-07 2.28.13 PM.jpg', 'rb'), caption=f'👋 Привет, меня зовут Лиза\n\n'
+    bot.send_photo(user_id, photo=open('telegram_bot/warm_up_bot/data/photos/2023-06-07 2.28.13 PM.jpg', 'rb'), caption=f'👋 Привет, меня зовут Лиза\n\n'
                            f'Я виртуальный ассистент Ибрата, '
                            f'готова принять вашу заявку на личную диагностику!\n\n'
                            f'👀 *Кстати, как к вам обращаться?*\n\n'
