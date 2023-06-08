@@ -33,18 +33,18 @@ def start_message(message: Message):
     if user_id not in user_data:
         user_data[user_id] = {'username': message.from_user.username}
     bot.set_state(user_id, States.enter_name, chat_id)
-    bot.send_photo(user_id, photo=open('telegram_bot/warm_up_bot/data/photos/2023-06-07 2.28.13 PM.jpg', 'rb'), caption=f'👋 Привет, меня зовут Лиза\n\n'
-                           f'Я виртуальный ассистент Ибрата, '
-                           f'готова принять вашу заявку на личную диагностику!\n\n'
-                           f'👀 *Кстати, как к вам обращаться?*\n\n'
-                           f'(Введите свое имя)', reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
-
-    # bot.send_photo(user_id, photo='AgACAgIAAxkBAAIB62SBvAYVsNSOmu0dsjDGXqqHNF50AAIxyzEbta8RSLtRZv9ss1SSAQADAgADeQADLwQ',
-    #                caption=f'👋 Привет, меня зовут Лиза\n\n'
+    # bot.send_photo(user_id, photo=open('telegram_bot/warm_up_bot/data/photos/2023-06-07 2.28.13 PM.jpg', 'rb'), caption=f'👋 Привет, меня зовут Лиза\n\n'
     #                        f'Я виртуальный ассистент Ибрата, '
     #                        f'готова принять вашу заявку на личную диагностику!\n\n'
     #                        f'👀 *Кстати, как к вам обращаться?*\n\n'
     #                        f'(Введите свое имя)', reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
+
+    bot.send_photo(user_id, photo='AgACAgIAAxkBAAMbZIICG7vmPW-HF4upkh_vcE8ow-EAAjHLMRu1rxFIeBaekTZNgEABAAMCAAN5AAMvBA',
+                   caption=f'👋 Привет, меня зовут Лиза\n\n'
+                           f'Я виртуальный ассистент Ибрата, '
+                           f'готова принять вашу заявку на личную диагностику!\n\n'
+                           f'👀 *Кстати, как к вам обращаться?*\n\n'
+                           f'(Введите свое имя)', reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
 
 
 @bot.message_handler(state=States.enter_name)
@@ -58,7 +58,7 @@ def get_name(message: Message):
     text = f'*Очень приятно, {name} ❣️*\n\n' \
            'А теперь поделитесь пожалуйста *своим номером телефона*, чтобы Ибрат лично мог с вами связаться!\n\n' \
            '(Жмите на кнопку в меню)'
-    bot.send_photo(user_id, photo='AgACAgIAAxkBAAIB7WSBvCk7Iocal_ss4QskerBkF9ZJAAIyyzEbta8RSCls76749M6ZAQADAgADeQADLwQ',
+    bot.send_photo(user_id, photo='AgACAgIAAxkBAAMeZIICMjDIy9mEldb9Joai0xPTt9sAAjLLMRu1rxFIjQX2LKMoskkBAAMCAAN5AAMvBA',
                    caption=text,
                    reply_markup=markup, parse_mode='Markdown')
     user_data[user_id]['name'] = name
@@ -76,7 +76,7 @@ def get_age(message: Message):
         markup = ReplyKeyboardMarkup()
         button1 = KeyboardButton('Погнали!')
         markup.add(button1)
-        bot.send_voice(chat_id, 'AwACAgIAAxkBAAIBe2SAcF8hmzZQSJNDsKLI-3ZlXDX3AAJDLAAC3ckAAUg2ON27vliZXC8E',
+        bot.send_voice(chat_id, 'AgACAgIAAxkBAAMhZIICQ7oDNVB64dzT_URs8HLO96IAAjPLMRu1rxFIwmwTchHLlJMBAAMCAAN5AAMvBA',
                        caption='📞🔥 Ибрат на связи, скорее слушайте аудио!',
                        reply_markup=markup)
     else:
@@ -229,12 +229,12 @@ def describe_problem(message: Message):
 #     print(f"Received voice with id: {file_id}", )
 #     bot.send_voice(message.chat.id, file_id)
 #
-@bot.message_handler(content_types=['photo'])
-def handle_photo(message):
-    file_id = message.photo[-1].file_id  # Получаем ID последней (наибольшей) фотографии
-    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-    print(f"Received photo with id: {file_id}")
-    bot.send_photo(message.chat.id, file_id)
+# @bot.message_handler(content_types=['photo'])
+# def handle_photo(message):
+#     file_id = message.photo[-1].file_id  # Получаем ID последней (наибольшей) фотографии
+#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+#     print(f"Received photo with id: {file_id}")
+#     bot.send_photo(message.chat.id, file_id)
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
