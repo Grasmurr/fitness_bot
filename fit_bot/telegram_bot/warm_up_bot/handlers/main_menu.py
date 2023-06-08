@@ -33,12 +33,18 @@ def start_message(message: Message):
     if user_id not in user_data:
         user_data[user_id] = {'username': message.from_user.username}
     bot.set_state(user_id, States.enter_name, chat_id)
-    bot.send_photo(user_id, photo='AgACAgIAAxkBAAIB62SBvAYVsNSOmu0dsjDGXqqHNF50AAIxyzEbta8RSLtRZv9ss1SSAQADAgADeQADLwQ',
-                   caption=f'👋 Привет, меня зовут Лиза\n\n'
+    bot.send_photo(user_id, photo=open('..data/photos/2023-06-07 2.28.13 PM.jpg', 'rb'), caption=f'👋 Привет, меня зовут Лиза\n\n'
                            f'Я виртуальный ассистент Ибрата, '
                            f'готова принять вашу заявку на личную диагностику!\n\n'
                            f'👀 *Кстати, как к вам обращаться?*\n\n'
                            f'(Введите свое имя)', reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
+
+    # bot.send_photo(user_id, photo='AgACAgIAAxkBAAIB62SBvAYVsNSOmu0dsjDGXqqHNF50AAIxyzEbta8RSLtRZv9ss1SSAQADAgADeQADLwQ',
+    #                caption=f'👋 Привет, меня зовут Лиза\n\n'
+    #                        f'Я виртуальный ассистент Ибрата, '
+    #                        f'готова принять вашу заявку на личную диагностику!\n\n'
+    #                        f'👀 *Кстати, как к вам обращаться?*\n\n'
+    #                        f'(Введите свое имя)', reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
 
 
 @bot.message_handler(state=States.enter_name)
@@ -223,11 +229,11 @@ def describe_problem(message: Message):
 #     print(f"Received voice with id: {file_id}", )
 #     bot.send_voice(message.chat.id, file_id)
 #
-# @bot.message_handler(content_types=['photo'])
-# def handle_photo(message):
-#     file_id = message.photo[-1].file_id  # Получаем ID последней (наибольшей) фотографии
-#     print(f"Received photo with id: {file_id}")
-#     bot.send_photo(message.chat.id, file_id)
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
+    file_id = message.photo[-1].file_id  # Получаем ID последней (наибольшей) фотографии
+    print(f"Received photo with id: {file_id}")
+    bot.send_photo(message.chat.id, file_id)
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
