@@ -226,7 +226,7 @@ def describe_problem(message: Message):
 @bot.message_handler(content_types=['voice'])
 def handle_voice(message):
     file_id = message.voice.file_id
-    print(f"Received voice with id: {file_id}", )
+    bot.send_message(message.from_user.id, f"Received voice with id: {file_id}")
     bot.send_voice(message.chat.id, file_id)
 #
 # @bot.message_handler(content_types=['photo'])
