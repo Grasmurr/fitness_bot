@@ -76,7 +76,8 @@ def get_age(message: Message):
         markup = ReplyKeyboardMarkup()
         button1 = KeyboardButton('Погнали!')
         markup.add(button1)
-        bot.send_voice(chat_id, 'AwACAgIAAxkBAAMxZIIFR-7JoIy9uE1RX4AYTdcsEYUAAkMsAALdyQABSEj14zqmpCufLwQ',
+
+        bot.send_voice(chat_id, voice='AwACAgIAAxkBAAMxZIIFR-7JoIy9uE1RX4AYTdcsEYUAAkMsAALdyQABSEj14zqmpCufLwQ',
                        caption='📞🔥 Ибрат на связи, скорее слушайте аудио!',
                        reply_markup=markup)
     else:
