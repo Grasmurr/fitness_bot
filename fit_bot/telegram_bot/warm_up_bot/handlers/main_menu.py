@@ -33,8 +33,6 @@ def start_message(message: Message):
     if user_id not in user_data:
         user_data[user_id] = {'username': message.from_user.username}
     bot.set_state(user_id, States.enter_name, chat_id)
-    print(list(os.walk('data/photos')))
-
     bot.send_photo(user_id, photo='AgACAgIAAxkBAAIB62SBvAYVsNSOmu0dsjDGXqqHNF50AAIxyzEbta8RSLtRZv9ss1SSAQADAgADeQADLwQ',
                    caption=f'👋 Привет, меня зовут Лиза\n\n'
                            f'Я виртуальный ассистент Ибрата, '
