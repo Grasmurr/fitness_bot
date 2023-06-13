@@ -52,15 +52,15 @@ def check_unfinished_users():
                 markup.add(button1)
                 if now - last_interaction_time > timedelta(minutes=1) and notified == 0:
                     bot.send_photo(chat_id=user_id,
-                                   photo='AgACAgIAAxkBAAIFW2SIT8pWmSQ1c4E4Z5TwjaDxq2Zj'
-                                         'AAISyzEbAbtBSA3q6SoUypqdAQADAgADeQADLwQ',
+                                   photo='AgACAgIAAxkBAAICV2SIgoutZLFnVveTMW74rf'
+                                         '1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ',
                                    caption="*Упс, кажется вы отвлеклись...*\n\n"
                                            "Чтобы продолжить, нажмите на кнопку снизу👇",
                                    reply_markup=markup, parse_mode='Markdown')
                 else:
                     bot.send_photo(chat_id=user_id,
-                                   photo='AgACAgIAAxkBAAIFXmSIUFoYlDmJESFWBsudFJiZg6'
-                                         'qMAAIUyzEbAbtBSJV_98GyLvqyAQADAgADeQADLwQ',
+                                   photo='AgACAgIAAxkBAAICb2SIjMrh9wd3YwSuMvcBI0_bfW-MAA'
+                                         'JwxzEbHdtBSAPISViAFsjUAQADAgADeQADLwQ',
                                    caption="📞 *Вы здесь?* Не стала вас отвлекать, подумала что вы заняты...\n\n"
                                            "Вы не заполнили форму до конца, а заявки Ибрат получит "
                                            "*после прохождения всех этапов.*\n\nЧтобы заполнить форму до конца, "
@@ -81,8 +81,8 @@ def check_unfinished_users():
                 markup.add(button1)
                 if now - last_interaction_time > timedelta(minutes=1) and notified == 0:
                     bot.send_photo(chat_id=user_id,
-                                   photo='AgACAgIAAxkBAAIFW2SIT8pWmSQ1c4E4Z5TwjaDxq2Zj'
-                                         'AAISyzEbAbtBSA3q6SoUypqdAQADAgADeQADLwQ',
+                                   photo='AgACAgIAAxkBAAICV2SIgoutZLFnVveTM'
+                                         'W74rf1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ',
                                    caption="*Упс, кажется вы отвлеклись...*\n\n"
                                            "Чтобы продолжить, нажмите на кнопку снизу👇",
                                    reply_markup=markup, parse_mode='Markdown')
@@ -115,19 +115,4 @@ def check_unfinished_users():
 #                              "Пожалуйста, дополните информацию в анкете.")
 
 
-schedule.every(1).minutes.do(check_unfinished_users)
-# schedule.every().monday.do(check_phoneless_users)
 
-
-def run_scheduler():
-    while True:
-        try:
-            schedule.run_pending()
-        except Exception as e:
-            bot.send_message(305378717, f"Ошибка: {e}")
-        time.sleep(1)
-
-
-
-
-scheduler_thread = threading.Thread(target=run_scheduler)

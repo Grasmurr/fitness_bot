@@ -15,6 +15,8 @@ from courses.models import Категории, Content, Mailing, Training
 from telegram_bot.loader import bot
 from telegram_bot.states import States
 
+from telegram_bot.warm_up_bot.handlers.mailings import check_unfinished_users
+
 user_data = {}
 
 def send_daily_content():
@@ -137,6 +139,8 @@ def change_calories_norm():
 schedule.every().day.at("09:00").do(send_daily_content)
 schedule.every().day.at("18:00").do(check_calories)
 schedule.every().day.at("11:00").do(check_for_daily_content)
+schedule.every(1).minutes.do(check_unfinished_users)
+
 
 # Запускаем планировщик в отдельном потоке
 
@@ -144,7 +148,6 @@ schedule.every().day.at("11:00").do(check_for_daily_content)
 def run_scheduler():
     while True:
         try:
-            check_for_daily_content()
             schedule.run_pending()
         except Exception as e:
             bot.send_message(305378717, f"Ошибка: {e}")

@@ -18,7 +18,7 @@ bot.add_custom_filter(IsAdminFilter(bot))
 
 
 def start_bot():
-    bot.polling(none_stop=True)
+    bot.infinity_polling()
     # while True:
     #     try:
     #         bot.polling(none_stop=True)
