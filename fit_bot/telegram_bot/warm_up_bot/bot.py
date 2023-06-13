@@ -8,7 +8,7 @@ from .handlers.models import create_table
 def start_warmup_bot():
     create_table()
     scheduler_thread.start()
-    bot.infinity_polling()
+    bot.polling(none_stop=True)
 
 
 
