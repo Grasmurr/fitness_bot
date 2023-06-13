@@ -332,12 +332,12 @@ def describe_problem(message: Message):
 #     bot.send_voice(message.chat.id, file_id)
 
 
-@bot.message_handler(content_types=['photo'])
-def handle_photo(message):
-    file_id = message.photo[-1].file_id
-    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-    print(f"Received photo with id: {file_id}")
-    bot.send_photo(message.chat.id, file_id)
+# @bot.message_handler(content_types=['photo'])
+# def handle_photo(message):
+#     file_id = message.photo[-1].file_id
+#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+#     print(f"Received photo with id: {file_id}")
+#     bot.send_photo(message.chat.id, file_id)
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))

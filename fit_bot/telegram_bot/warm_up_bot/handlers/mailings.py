@@ -45,12 +45,12 @@ def check_unfinished_users():
     for user_id, last_interaction_time, notified in cursor.fetchall():
         if last_interaction_time is not None:
             last_interaction_time = datetime.strptime(last_interaction_time, '%Y-%m-%d %H:%M:%S')
-            if (now - last_interaction_time > timedelta(minutes=1) and notified == 0) or \
-                (now - last_interaction_time > timedelta(minutes=2) and notified == 1):
+            if (now - last_interaction_time > timedelta(minutes=2) and notified == 0) or \
+                (now - last_interaction_time > timedelta(minutes=15) and notified == 1):
                 markup = InlineKeyboardMarkup()
                 button1 = InlineKeyboardButton(text='Продолжить!', callback_data='continueafteremiind')
                 markup.add(button1)
-                if now - last_interaction_time > timedelta(minutes=1) and notified == 0:
+                if now - last_interaction_time > timedelta(minutes=2) and notified == 0:
                     bot.send_photo(chat_id=user_id,
                                    photo='AgACAgIAAxkBAAICV2SIgoutZLFnVveTMW74rf'
                                          '1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ',
@@ -74,12 +74,12 @@ def check_unfinished_users():
     for user_id, last_interaction_time, notified in cursor.fetchall():
         if last_interaction_time is not None:
             last_interaction_time = datetime.strptime(last_interaction_time, '%Y-%m-%d %H:%M:%S')
-            if (now - last_interaction_time > timedelta(minutes=1) and notified == 0) or \
-                (now - last_interaction_time > timedelta(minutes=2) and notified == 1):
+            if (now - last_interaction_time > timedelta(minutes=2) and notified == 0) or \
+                (now - last_interaction_time > timedelta(minutes=15) and notified == 1):
                 markup = InlineKeyboardMarkup()
                 button1 = InlineKeyboardButton(text='Продолжить!', callback_data='continueafteremiind')
                 markup.add(button1)
-                if now - last_interaction_time > timedelta(minutes=1) and notified == 0:
+                if now - last_interaction_time > timedelta(minutes=2) and notified == 0:
                     bot.send_photo(chat_id=user_id,
                                    photo='AgACAgIAAxkBAAICV2SIgoutZLFnVveTM'
                                          'W74rf1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ',
