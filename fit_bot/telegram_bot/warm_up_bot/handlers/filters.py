@@ -1,5 +1,5 @@
 from telebot.custom_filters import SimpleCustomFilter
-from telegram_bot.warm_up_bot.data.config import ADMINS
+from ..data.config import ADMINS
 from ..loader import bot
 
 
