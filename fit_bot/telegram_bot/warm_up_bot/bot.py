@@ -1,8 +1,6 @@
 from ..loader import bot
 from telebot.types import Message
-import handlers.main_menu
-import handlers.send_mails
-import handlers.mailings
+from .handlers import main_menu, send_mails, mailings
 from .handlers.mailings import scheduler_thread
 from .handlers.models import create_table
 
