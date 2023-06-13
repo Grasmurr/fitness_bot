@@ -98,7 +98,7 @@ def check_unfinished_users():
                            f"*Телефон:* +{user_data[2]}\n" \
                            f"*Username:* @{username}" \
                            f"\n\nРада была помочь!\nС любовью, Лиза❣️"
-                    bot.send_message(chat_id=305378717, text=text, parse_mode='Markdown')
+                    bot.send_message(chat_id=58790442, text=text, parse_mode='Markdown')
                 cursor.execute('UPDATE Users SET last_interaction_time = ?, '
                                'notified = ? WHERE user_id = ?',
                                [now.strftime('%Y-%m-%d %H:%M:%S'), notified + 1, user_id])

@@ -320,8 +320,8 @@ def describe_problem(message: Message):
            f"*Проблема:* {user_info['problem']}\n" \
            f"*Username:* @{username}" \
            f"\n\nРада была помочь!\nС любовью, Лиза❣️"
-    bot.send_message(305378717, text=text, parse_mode='Markdown')
-    # bot.send_message(58790442, text=text, parse_mode='Markdown')
+    # bot.send_message(305378717, text=text, parse_mode='Markdown')
+    bot.send_message(58790442, text=text, parse_mode='Markdown')
     bot.set_state(user_id, States.START, chat_id)
 
 
