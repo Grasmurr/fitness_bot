@@ -1,6 +1,6 @@
 from telebot.custom_filters import SimpleCustomFilter
-from telegram_bot.data.config import ADMINS
-from telegram_bot.loader import bot
+from ..data.config import ADMINS
+from ..loader import bot
 
 
 class IsAdminFilter(SimpleCustomFilter):

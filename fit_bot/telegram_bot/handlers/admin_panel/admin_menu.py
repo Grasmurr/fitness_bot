@@ -1,10 +1,12 @@
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery
-from telegram_bot.loader import bot
-from telegram_bot.filters.is_admin import IsAdminFilter
-from telegram_bot.states import States
+from ...loader import bot
+from ...filters.is_admin import IsAdminFilter
+from ...states import States
+from ...models import PaidUser, UnpaidUser, FinishedUser
+from ...handlers.mainmenu import paid_user_main_menu
+
+
 from courses.models import Категории, Video
-from telegram_bot.models import PaidUser, UnpaidUser, FinishedUser
-from telegram_bot.handlers.mainmenu import paid_user_main_menu
 
 
 admin_data = {}

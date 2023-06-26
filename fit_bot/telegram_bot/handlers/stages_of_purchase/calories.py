@@ -1,12 +1,20 @@
-from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
+from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from datetime import date
-from telegram_bot.loader import bot
-from telegram_bot.states import States
-from .mainmenu import just_main_menu
-from telegram_bot.models import UnpaidUser, PaidUser, UserCalories
-from telegram_bot.handlers.define_timezone import start_timezone_check
+from telebot import custom_filters
+
+from ...loader import bot
+from ...states import PurchaseStates, TestStates
+from ...handlers.mainmenu import get_id, create_inline_markup, create_keyboard_markup
+from ...models import PaidUser
+from .define_timezone import start_timezone_check
 
 user_data = {}
+
+
+def add_data(user, tag, info):
+    if user not in user_data:
+        user_data[user] = {}
+    user_data[user][tag] = info
 
 
 def is_valid_number(text):
@@ -16,37 +24,48 @@ def is_valid_number(text):
     return False
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'fillthetest')
-def start_calories_norm(call):
-    user_id = call.from_user.id
-
-    if user_id not in user_data:
-        user_data[user_id] = {'state': States.START}
+@bot.message_handler(commands=['test'])
+def run_test(message):
     markup = InlineKeyboardMarkup()
-    button1 = InlineKeyboardButton('Старт!', callback_data='startsurvey')
-    button2 = InlineKeyboardButton('Отмена', callback_data='stopsurvey')
-    markup.add(button1, button2)
+    button1 = InlineKeyboardButton(text='go', callback_data='hi')
+    markup.add(button1)
+    bot.send_message(message.from_user.id, text='h', reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'hi')
+def run(call):
+    start_calories_norm(call)
+
+
+@bot.callback_query_handler(state=PurchaseStates.choose_bank,
+                            func=lambda call: call.data == 'fillthetest')
+def start_calories_norm(call):
+    user_id, chat_id = get_id(call=call)
+
+    markup = create_inline_markup(('Старт!', 'startsurvey'), ('Отмена', 'stopsurvey'))
+
     bot.send_message(text='Итак, вам будут заданы 8 вопросов касающиеся ваших данных, '
                           'по которым мы сможем определить вашу ежедневную норму калорий, '
                           'а также подобрать наилучший курс. '
                           'Чтобы начать, нажимайте старт!', chat_id=user_id, reply_markup=markup)
+    bot.set_state(user_id, TestStates.start_test, chat_id)
 
 
-@bot.callback_query_handler(func = lambda call: call.from_user.id in user_data and user_data[call.from_user.id]['state'] == States.START and call.data in ['startsurvey', 'stopsurvey'])
+@bot.callback_query_handler(state=TestStates.start_test,
+                            func=lambda call: call.data in ['startsurvey', 'stopsurvey'])
 def start_survey(call):
-    user_id = call.message.chat.id
+    user_id, chat_id = get_id(call=call)
     req = call.data
     if req == 'startsurvey':
-        if user_data[user_id]['state'] == States.START:
-            user_data[user_id]['state'] = States.ASK_GENDER
-            bot.send_message(user_id, "Какой у Вас пол? Введите 'М' или 'Ж'.", reply_markup=ReplyKeyboardRemove())
+        bot.send_message(user_id, "Какой у Вас пол? Введите 'М' или 'Ж'.", reply_markup=ReplyKeyboardRemove())
+        bot.set_state(user_id, TestStates.choose_gender, chat_id)
     else:
         bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
 
 
 def process_start_state(message):
     name = message.from_user.full_name
-    user_id = message.chat.id
+    user_id, chat_id = get_id(message=message)
     response = f"Спасибо! Вот Ваши данные:\n" \
                f"Пол: {user_data[user_id]['gender']}\n" \
                f"Рост: {user_data[user_id]['height']} см\n" \
@@ -72,14 +91,12 @@ def process_start_state(message):
     username = user_info.username
     unregistered_user = PaidUser(user=user_id, username=username, paid_day=date.today())
     unregistered_user.save()
-    user_calories = UserCalories(user=unregistered_user, day1=0, day2=0, day3=0, day4=0, day5=0, day6=0, day7=0,
-                                 day8=0, day9=0, day10=0, day11=0, day12=0, day13=0, day14=0, day15=0, day16=0,
-                                 day17=0, day18=0, day19=0, day20=0, day21=0)
-    user_calories.save()
 
     if user_data[user_id]['gender'] == 'м':
 
-        PaidUser.objects.filter(user=user_id).update(пол='M', цель=goal, full_name=name, место=place, уровень=experience)
+        PaidUser.objects.filter(user=user_id).update(пол='M', цель=goal,
+                                                     full_name=name, место=place, уровень=experience,
+                                                     proteins=round(user_data[user_id]['weight'] * 1.6, 1))
 
         if goal == 'G':
             PaidUser.objects.filter(user=user_id).update(calories = round((88.362 + 13.397 * user_data[user_id][
@@ -99,8 +116,8 @@ def process_start_state(message):
 
     elif user_data[user_id]['gender'] == 'ж':
         PaidUser.objects.filter(user=user_id).update(пол='F', цель=goal, full_name=name, место=place,
-                                                     уровень=experience)
-
+                                                     уровень=experience,
+                                                     proteins=round(user_data[user_id]['weight'] * 1.6, 1))
         if goal == 'G':
             PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
             'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125)
@@ -115,80 +132,107 @@ def process_start_state(message):
                                   f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875, 1)} ккал в день"
                                   f"\n\nУчитывайте это значение при составлении"
                                   f" своего рациона питания во время прохождения курса 21 день.")
+
+
     start_timezone_check(message)
 
 
-@bot.message_handler(func=lambda message: message.chat.id in user_data and user_data[message.chat.id]['state'] != States.START)
+@bot.message_handler(state=TestStates.choose_gender, content_types=['text'])
 def conduct_calories_norm(message: Message):
-    user_id = message.chat.id
+    user_id, chat_id = get_id(message=message)
     text = message.text
+    if text.lower() in ('м', 'ж'):
+        add_data(user_id, 'gender', text.lower())
+        bot.send_message(user_id, "Какой у Вас рост (в см)?")
+        bot.set_state(user_id, TestStates.enter_height, chat_id)
+    else:
+        bot.send_message(user_id, "Пожалуйста, введите 'М' или 'Ж'.")
 
-    if user_data[user_id]['state'] == States.ASK_GENDER:
-        if text.lower() in ('м', 'ж'):
-            user_data[user_id]['gender'] = text.lower()
-            user_data[user_id]['state'] = States.ASK_HEIGHT
-            bot.send_message(user_id, "Какой у Вас рост (в см)?")
-        else:
-            bot.send_message(user_id, "Пожалуйста, введите 'М' или 'Ж'.")
 
-    elif user_data[user_id]['state'] == States.ASK_HEIGHT:
-        if is_valid_number(text):
-            user_data[user_id]['height'] = int(text)
-            user_data[user_id]['state'] = States.ASK_WEIGHT
-            bot.send_message(user_id, "Какой у Вас вес (в кг)?")
-        else:
-            bot.send_message(user_id, "Пожалуйста, введите корректный рост (в см).")
+@bot.message_handler(state=TestStates.enter_height, content_types=['text'])
+def conduct_calories_nor(message: Message):
+    user_id, chat_id = get_id(message=message)
+    text = message.text
+    if is_valid_number(text):
+        add_data(user_id, 'height', int(text))
+        bot.send_message(user_id, "Какой у Вас вес (в кг)?")
+        bot.set_state(user_id, TestStates.enter_weight, chat_id)
+    else:
+        bot.send_message(user_id, "Пожалуйста, введите корректный рост (в см).")
 
-    elif user_data[user_id]['state'] == States.ASK_WEIGHT:
-        if is_valid_number(text):
-            user_data[user_id]['weight'] = int(text)
-            user_data[user_id]['state'] = States.ASK_AGE
-            bot.send_message(user_id, "Сколько Вам лет?")
-        else:
-            bot.send_message(user_id, "Пожалуйста, введите корректный вес (в кг).")
 
-    elif user_data[user_id]['state'] == States.ASK_AGE:
-        if is_valid_number(text):
-            user_data[user_id]['age'] = int(text)
-            user_data[user_id]['state'] = States.ASK_ACTIVITY
-            markup = ReplyKeyboardMarkup(row_width=5, resize_keyboard=True)
-            markup.add(KeyboardButton("1"), KeyboardButton("2"), KeyboardButton("3"), KeyboardButton("4"), KeyboardButton("5"))
+@bot.message_handler(state=TestStates.enter_weight, content_types=['text'])
+def conduct_calories_no(message: Message):
+    user_id, chat_id = get_id(message=message)
+    text = message.text
+    if is_valid_number(text):
+        add_data(user_id, 'weight', int(text))
+        bot.send_message(user_id, "Сколько Вам лет?")
+        bot.set_state(user_id, TestStates.enter_age, chat_id)
+    else:
+        bot.send_message(user_id, "Пожалуйста, введите корректный вес (в кг).")
 
-            bot.send_message(user_id,
-                             'Пожалуйста, выберите цифру, наиболее соответствующую уровню вашей активности:'
-                             '\n1: Малоподвижный образ жизни (тренировок нет или их очень мало)'
-                             '\n2: Небольшая активность (1-3 тренировки в неделю) '
-                             '\n3: Умеренная активность (3-5 тренировок в неделю)'
-                             '\n4: Высокая активность (6-7 тренировок в неделю)'
-                             '\n5: Очень высокая активность (тяжелые тренировки 6-7 дней в неделю)', reply_markup=markup)
 
-        else:
-            bot.send_message(user_id, "Пожалуйста, выберите одну из кнопок ниже.")
+@bot.message_handler(state=TestStates.enter_age, content_types=['text'])
+def conduct_calories_n(message: Message):
+    user_id, chat_id = get_id(message=message)
+    text = message.text
+    if is_valid_number(text):
+        add_data(user_id, 'age', int(text))
+        markup = create_keyboard_markup(1, 2, 3, 4, 5, row=True)
+        bot.send_message(user_id,
+                         'Пожалуйста, выберите цифру, наиболее соответствующую уровню вашей активности:'
+                         '\n1: Малоподвижный образ жизни (тренировок нет или их очень мало)'
+                         '\n2: Небольшая активность (1-3 тренировки в неделю) '
+                         '\n3: Умеренная активность (3-5 тренировок в неделю)'
+                         '\n4: Высокая активность (6-7 тренировок в неделю)'
+                         '\n5: Очень высокая активность (тяжелые тренировки 6-7 дней в неделю)',
+                         reply_markup=markup)
+        bot.set_state(user_id, TestStates.ask_activity, chat_id)
+    else:
+        bot.send_message(user_id, "Пожалуйста, введите корректный возраст (в годах).")
 
-    elif user_data[user_id]['state'] == States.ASK_ACTIVITY:
-        if text.isdigit() and int(text) in [1, 2, 3, 4, 5]:
-            user_data[user_id]['activity'] = int(text)
-            user_data[user_id]['state'] = States.ASK_GOAL
-            markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-            markup.add(KeyboardButton("Набрать вес"), KeyboardButton("Сбросить вес"))
-            bot.send_message(user_id, 'Хотите ли вы набрать или сбросить вес?', reply_markup=markup)
-        else:
-            bot.send_message(user_id, "Пожалуйста, введите корректную цифру (1-5)")
 
-    elif user_data[user_id]['state'] == States.ASK_GOAL:
-        if text in ['Набрать вес', 'Сбросить вес']:
-            user_data[user_id]['goal'] = text
-            user_data[user_id]['state'] = States.ASK_PLACE
-            markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-            # markup.add(KeyboardButton("Дом"), KeyboardButton("Зал"))
-            # bot.send_message(user_id, "Где вы хотите заниматься?", reply_markup=markup)
-            user_data[user_id]['state'] = States.START
-            user_data[user_id]['experience'] = 'Новичок'
-            user_data[user_id]['place'] = 'Дом'
+@bot.message_handler(state=TestStates.ask_activity, content_types=['text'])
+def conduct_calories(message: Message):
+    user_id, chat_id = get_id(message=message)
+    text = message.text
+    if text.isdigit() and int(text) in [1, 2, 3, 4, 5]:
+        add_data(user_id, 'activity', int(text))
+        markup = create_keyboard_markup('Набрать вес', 'Сбросить вес', row=True)
+        bot.send_message(user_id, 'Хотите ли вы набрать или сбросить вес?', reply_markup=markup)
+        bot.set_state(user_id, TestStates.ask_goal, chat_id)
+    else:
+        bot.send_message(user_id, "Пожалуйста, введите корректную цифру (1-5)")
 
-            process_start_state(message)
-        else:
-            bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+
+@bot.message_handler(state=TestStates.ask_goal, content_types=['text'])
+def conduct_calorie(message: Message):
+    user_id, chat_id = get_id(message=message)
+    text = message.text
+    if text in ['Набрать вес', 'Сбросить вес']:
+        add_data(user_id, 'goal', text)
+        add_data(user_id, 'experience', 'Новичок')
+        add_data(user_id, 'place', 'Дом')
+        process_start_state(message)
+    else:
+        bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+
+
+    # elif user_data[user_id]['state'] == States.ASK_GOAL:
+    #     if text in ['Набрать вес', 'Сбросить вес']:
+    #         user_data[user_id]['goal'] = text
+    #         user_data[user_id]['state'] = States.ASK_PLACE
+    #         markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+    #         # markup.add(KeyboardButton("Дом"), KeyboardButton("Зал"))
+    #         # bot.send_message(user_id, "Где вы хотите заниматься?", reply_markup=markup)
+    #         user_data[user_id]['state'] = States.START
+    #         user_data[user_id]['experience'] = 'Новичок'
+    #         user_data[user_id]['place'] = 'Дом'
+    #
+    #         process_start_state(message)
+    #     else:
+    #         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
     # elif user_data[user_id]['state'] == States.ASK_PLACE:
     #     if text in ['Зал', 'Дом']:
@@ -218,6 +262,8 @@ def conduct_calories_norm(message: Message):
     #     else:
     #         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
+
+bot.add_custom_filter(custom_filters.StateFilter(bot))
 
 '''💳 Отлично! Теперь давайте оформим покупку курса "21 день". 
 Курс стоит ХХХ рублей. Для оплаты нажмите на кнопку "Оплатить" 

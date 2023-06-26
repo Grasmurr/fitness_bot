@@ -41,6 +41,7 @@ class PaidUser(models.Model):
     full_name = models.CharField(max_length=100, blank=True, null=True)
     paid_day = models.DateField(blank=True, null=True)
     calories = models.IntegerField(blank=True, null=True)
+    proteins = models.IntegerField(blank=True, null=True)
     timezone = models.CharField(max_length=100)
     пол = models.CharField(max_length=7, choices=GENDER_CHOICES, default='M')
     цель = models.CharField(max_length=12, choices=GOAL_CHOICES, default='G')
@@ -54,53 +55,39 @@ class PaidUser(models.Model):
         app_label = 'telegram_bot'
 
 
-class UserCalories(models.Model):
-    user = models.OneToOneField(PaidUser, on_delete=models.CASCADE)
-    day1 = models.PositiveIntegerField()
-    day1_requested = models.BooleanField(default=False)
-    day2 = models.PositiveIntegerField()
-    day2_requested = models.BooleanField(default=False)
-    day3 = models.PositiveIntegerField()
-    day3_requested = models.BooleanField(default=False)
-    day4 = models.PositiveIntegerField()
-    day4_requested = models.BooleanField(default=False)
-    day5 = models.PositiveIntegerField()
-    day5_requested = models.BooleanField(default=False)
-    day6 = models.PositiveIntegerField()
-    day6_requested = models.BooleanField(default=False)
-    day7 = models.PositiveIntegerField()
-    day7_requested = models.BooleanField(default=False)
-    day8 = models.PositiveIntegerField()
-    day8_requested = models.BooleanField(default=False)
-    day9 = models.PositiveIntegerField()
-    day9_requested = models.BooleanField(default=False)
-    day10 = models.PositiveIntegerField()
-    day10_requested = models.BooleanField(default=False)
-    day11 = models.PositiveIntegerField()
-    day11_requested = models.BooleanField(default=False)
-    day12 = models.PositiveIntegerField()
-    day12_requested = models.BooleanField(default=False)
-    day13 = models.PositiveIntegerField()
-    day13_requested = models.BooleanField(default=False)
-    day14 = models.PositiveIntegerField()
-    day14_requested = models.BooleanField(default=False)
-    day15 = models.PositiveIntegerField()
-    day15_requested = models.BooleanField(default=False)
-    day16 = models.PositiveIntegerField()
-    day16_requested = models.BooleanField(default=False)
-    day17 = models.PositiveIntegerField()
-    day17_requested = models.BooleanField(default=False)
-    day18 = models.PositiveIntegerField()
-    day18_requested = models.BooleanField(default=False)
-    day19 = models.PositiveIntegerField()
-    day19_requested = models.BooleanField(default=False)
-    day20 = models.PositiveIntegerField()
-    day20_requested = models.BooleanField(default=False)
-    day21 = models.PositiveIntegerField()
-    day21_requested = models.BooleanField(default=False)
+class CourseDay(models.Model):
+    user = models.ForeignKey(PaidUser, on_delete=models.CASCADE)
+    day = models.IntegerField()
+    total_calories = models.IntegerField(default=0)
+    total_protein = models.IntegerField(default=0)
+    total_fat = models.IntegerField(default=0)
+    total_carbs = models.IntegerField(default=0)
+
+    class Meta:
+        app_label = 'telegram_bot'
+
+
+class Meal(models.Model):
+    MEAL_TYPES = [
+        ('breakfast', 'Завтрак'),
+        ('lunch', 'Обед'),
+        ('dinner', 'Ужин'),
+        ('snack', 'Перекус'),
+    ]
+    course_day = models.ForeignKey(CourseDay, on_delete=models.CASCADE)
+    meal_type = models.CharField(choices=MEAL_TYPES, max_length=10)
+    calories = models.IntegerField(default=0)
+    protein = models.IntegerField(default=0)
+    fat = models.IntegerField(default=0)
+    carbs = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"User {self.user.username} - 21-day calories"
+        return f"{self.course_day.user.username} " \
+               f"({self.course_day.user.full_name}), Day {self.course_day.day}, " \
+               f"{self.get_meal_type_display()}"
+
+    class Meta:
+        app_label = 'telegram_bot'
 
 
 class BankCards(models.Model):
@@ -137,6 +124,7 @@ class FinishedUser(models.Model):
     full_name = models.CharField(max_length=100, blank=True, null=True)
     paid_day = models.DateField(blank=True, null=True)
     calories = models.IntegerField(blank=True, null=True)
+    proteins = models.IntegerField(blank=True, null=True)
     timezone = models.CharField(max_length=100)
     пол = models.CharField(max_length=7, choices=GENDER_CHOICES, default='M')
     цель = models.CharField(max_length=12, choices=GOAL_CHOICES, default='G')

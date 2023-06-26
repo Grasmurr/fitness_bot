@@ -1,4 +1,5 @@
 from enum import Enum
+from telebot.handler_backends import State, StatesGroup
 
 
 class States(Enum):
@@ -29,4 +30,36 @@ class States(Enum):
     ADD_PRODUCT = 'add_product'
     CHANGE_PRODUCT = 'change_product'
     CHANGE_GRAMS = 'change_grams'
+
+
+class PurchaseStates(StatesGroup):
+    initial = State()
+    added_initials = State()
+    choose_bank = State()
+
+
+class TestStates(StatesGroup):
+    initial = State()
+    start_test = State()
+    choose_gender = State()
+    enter_height = State()
+    enter_weight = State()
+    enter_age = State()
+    ask_activity = State()
+    ask_goal = State()
+
+
+class CourseInteraction(StatesGroup):
+    initial = State()
+    enter_own_KBJU = State()
+    enter_new_product = State()
+    choose_product = State()
+    continue_choosing_product = State()
+    enter_grams = State()
+    choose_amount = State()
+    enter_meal_name = State()
+    continue_meal_name = State()
+    enter_meal_calories = State()
+    enter_meal_protein = State()
+
 

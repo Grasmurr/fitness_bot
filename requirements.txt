@@ -13,3 +13,5 @@ gunicorn
 apscheduler
 openpyxl
 schedule
+watchdog
+psutil

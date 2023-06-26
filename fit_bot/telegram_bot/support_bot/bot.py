@@ -4,7 +4,7 @@ from . import handlers
 
 
 def start_support_bot():
-    bot.polling(none_stop=True)
+    bot.infinity_polling()
     # while True:
     #     try:
     #

@@ -12,12 +12,13 @@ from django.core.management import execute_from_command_line
 execute_from_command_line(["manage.py", "check"])
 from . import handlers
 
-from telegram_bot.filters.is_admin import IsAdminFilter
+from .filters.is_admin import IsAdminFilter
 
 bot.add_custom_filter(IsAdminFilter(bot))
 
 
 def start_bot():
+    # bot.infinity_polling(restart_on_change=True)
     bot.infinity_polling()
     # while True:
     #     try:

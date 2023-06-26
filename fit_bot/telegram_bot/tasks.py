@@ -10,12 +10,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 import datetime
 
-from telegram_bot.models import PaidUser, FinishedUser, UserCalories
+from .models import PaidUser, FinishedUser
 from courses.models import Категории, Content, Mailing, Training
-from telegram_bot.loader import bot
-from telegram_bot.states import States
+from .loader import bot
+from .states import States
 
-from telegram_bot.warm_up_bot.handlers.mailings import check_unfinished_users
+from .warm_up_bot.handlers.mailings import check_unfinished_users
 
 user_data = {}
 
@@ -82,20 +82,19 @@ def check_for_daily_content():
                 уровень=user.уровень
             )
 
-            if current_day != 0:
-                daily_contents = Mailing.objects.filter(category=matching_category, day=current_day)
-                if daily_contents:
-                    user_calories = UserCalories.objects.get(user=user)
-                    is_requested = getattr(user_calories, f'day{current_day}_requested')
-
-                    if not is_requested:
-                        bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
+            # if current_day != 0:
+            #     daily_contents = Mailing.objects.filter(category=matching_category, day=current_day)
+                # if daily_contents:
+                #     user_calories = UserCalories.objects.get(user=user)
+                #     is_requested = getattr(user_calories, f'day{current_day}_requested')
+                #
+                #     if not is_requested:
+                #         bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
         except:
             pass
 
 def check_and_send_content():
     current_time_utc = datetime.datetime.now(pytz.utc)
-
 
     paid_users = PaidUser.objects.all()
 
