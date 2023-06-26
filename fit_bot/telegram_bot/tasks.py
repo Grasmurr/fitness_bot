@@ -61,10 +61,14 @@ def check_calories():
     paid_users = PaidUser.objects.all()
 
     for user in paid_users:
-        bot.send_message(chat_id=user.user, text='Дорогой участник курса! '
+        try:
+            bot.send_message(chat_id=user.user, text='Дорогой участник курса! '
                                                  'Пожалуйста, не забывайте заполнять '
                                                  'количество калорий, которые вы за сегодня '
                                                  'употребили, если еще не сделали этого!')
+        except Exception as E:
+            bot.send_message(305378717, f"Ошибка: {E}")
+
 
 
 def check_for_daily_content():
@@ -84,14 +88,14 @@ def check_for_daily_content():
 
             # if current_day != 0:
             #     daily_contents = Mailing.objects.filter(category=matching_category, day=current_day)
-                # if daily_contents:
-                #     user_calories = UserCalories.objects.get(user=user)
-                #     is_requested = getattr(user_calories, f'day{current_day}_requested')
-                #
-                #     if not is_requested:
-                #         bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
-        except:
-            pass
+            #     if daily_contents:
+            #         user_calories = UserCalories.objects.get(user=user)
+            #         is_requested = getattr(user_calories, f'day{current_day}_requested')
+            #
+            #         if not is_requested:
+            #             bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
+        except Exception as E:
+            bot.send_message(305378717, f"Ошибка: {E}")
 
 def check_and_send_content():
     current_time_utc = datetime.datetime.now(pytz.utc)
@@ -99,40 +103,46 @@ def check_and_send_content():
     paid_users = PaidUser.objects.all()
 
     for user in paid_users:
-        delta_days = (timezone.now().date() - user.paid_day).days
-        user_timezone_str = user.timezone
+        try:
+            delta_days = (timezone.now().date() - user.paid_day).days
+            user_timezone_str = user.timezone
 
-        if user_timezone_str:
-            user_timezone = pytz.timezone(user_timezone_str)
-            current_time_local = current_time_utc.astimezone(user_timezone)
+            if user_timezone_str:
+                user_timezone = pytz.timezone(user_timezone_str)
+                current_time_local = current_time_utc.astimezone(user_timezone)
 
-        if delta_days == 22:
-            finished_user = FinishedUser(
-                user=user.user,
-                username=user.username,
-                full_name=user.full_name,
-                paid_day=user.paid_day,
-                calories=user.calories,
-                timezone=user.timezone,
-                пол=user.пол,
-                цель=user.цель,
-                место=user.место,
-                уровень=user.уровень,
-            )
-            finished_user.save()
-            user.delete()
+            if delta_days == 22:
+                finished_user = FinishedUser(
+                    user=user.user,
+                    username=user.username,
+                    full_name=user.full_name,
+                    paid_day=user.paid_day,
+                    calories=user.calories,
+                    timezone=user.timezone,
+                    пол=user.пол,
+                    цель=user.цель,
+                    место=user.место,
+                    уровень=user.уровень,
+                )
+                finished_user.save()
+                user.delete()
+        except Exception as E:
+            bot.send_message(305378717, f"Ошибка: {E}")
 
 
 def change_calories_norm():
     paid_users = PaidUser.objects.all()
     for user in paid_users:
-        delta_days = (timezone.now().date() - user.paid_day).days
+        try:
+            delta_days = (timezone.now().date() - user.paid_day).days
 
-        if delta_days == 8:
-            if user.цель == "G":
-                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
-            else:
-                PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.858)
+            if delta_days == 8:
+                if user.цель == "G":
+                    PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
+                else:
+                    PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.858)
+        except Exception as E:
+            bot.send_message(305378717, f"Ошибка: {E}")
 
 
 schedule.every().day.at("09:00").do(send_daily_content)
