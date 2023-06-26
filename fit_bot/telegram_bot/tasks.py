@@ -19,42 +19,45 @@ from .warm_up_bot.handlers.mailings import check_unfinished_users
 
 user_data = {}
 
+
 def send_daily_content():
     paid_users = PaidUser.objects.all()
 
     for user in paid_users:
+        try:
+            # Находим соответствующую категорию
+            # контента на основе характеристик пользователя
+            matching_category = Категории.objects.get(
+                пол=user.пол,
+                цель=user.цель,
+                место=user.место,
+                уровень=user.уровень
+            )
 
-        # Находим соответствующую категорию
-        # контента на основе характеристик пользователя
-        matching_category = Категории.objects.get(
-            пол=user.пол,
-            цель=user.цель,
-            место=user.место,
-            уровень=user.уровень
-        )
+            # Вычисляем номер дня на основе оплаченного дня
+            delta_days = (timezone.now().date() - user.paid_day).days
+            current_day = delta_days
 
-        # Вычисляем номер дня на основе оплаченного дня
-        delta_days = (timezone.now().date() - user.paid_day).days
-        current_day = delta_days
+            # Получаем контент для соответствующей категории и дня
+            daily_contents = Mailing.objects.filter(
+                category=matching_category,
+                day=current_day,
+            )
+            # Отправляем контент пользователю через Telegram Bot API
+            for content in daily_contents:
+                updated_caption = content.caption.replace("calories", str(user.calories)).replace("name", user.full_name)
 
-        # Получаем контент для соответствующей категории и дня
-        daily_contents = Mailing.objects.filter(
-            category=matching_category,
-            day=current_day,
-        )
-        # Отправляем контент пользователю через Telegram Bot API
-        for content in daily_contents:
-            updated_caption = content.caption.replace("calories", str(user.calories)).replace("name", user.full_name)
-
-            if content.content_type == 'V':
-                video_file_id = content.video.video_file_id
-                bot.send_video(chat_id=user.user, video=video_file_id, caption=updated_caption)
-            elif content.content_type == 'T':
-                bot.send_message(chat_id=user.user, text=updated_caption)
-            elif content.content_type == 'P':
-                bot.send_photo(chat_id=user.user, photo=content.photo_file_id, caption=updated_caption)
-            elif content.content_type == 'G':
-                bot.send_document(chat_id=user.user, document=content.gif_file_id, caption=updated_caption)
+                if content.content_type == 'V':
+                    video_file_id = content.video.video_file_id
+                    bot.send_video(chat_id=user.user, video=video_file_id, caption=updated_caption)
+                elif content.content_type == 'T':
+                    bot.send_message(chat_id=user.user, text=updated_caption)
+                elif content.content_type == 'P':
+                    bot.send_photo(chat_id=user.user, photo=content.photo_file_id, caption=updated_caption)
+                elif content.content_type == 'G':
+                    bot.send_document(chat_id=user.user, document=content.gif_file_id, caption=updated_caption)
+        except Exception as E:
+            bot.send_message(305378717, f"Ошибка: {E}")
 
 
 def check_calories():
