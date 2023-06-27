@@ -105,7 +105,7 @@ def get_age(message: Message):
         button1 = InlineKeyboardButton(text='Погнали!', callback_data='Go!')
         markup.add(button1)
         sent_message = bot.send_voice(chat_id,
-                                      'AgACAgIAAxkBAAMhZIICQ7oDNVB64dzT_URs8HLO96IAAjPLMRu1rxFIwmwTchHLlJMBAAMCAAN5AAMvBA',
+                                      'AwACAgIAAxkBAAMxZIIFR-7JoIy9uE1RX4AYTdcsEYUAAkMsAALdyQABSEj14zqmpCufLwQ',
                                       reply_markup=markup)
         cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
                        [sent_message.message_id, 'voice', user_id])
@@ -300,7 +300,7 @@ def describe_problem(message: Message):
     conn.commit()
 
     bot.send_photo(user_id,
-                   photo='AgACAgIAAxkBAAICEGSBvWgqfkLWQ-1mlbfMQPwDDBl7AAIzyzEbta8RSArObAbGEt9wAQADAgADeQADLwQ',
+                   photo='AgACAgIAAxkBAAMhZIICQ7oDNVB64dzT_URs8HLO96IAAjPLMRu1rxFIwmwTchHLlJMBAAMCAAN5AAMvBA',
                    caption='Спасибо за предоставленную информацию!\n\n'
                            '*Ибрат свяжется с вами в течение 24 часов.*\n\n'
                            'Добро пожаловать в 21FIT! ❣️\nЕще увидимся!', parse_mode='Markdown')
@@ -332,12 +332,12 @@ def describe_problem(message: Message):
 #     bot.send_voice(message.chat.id, file_id)
 
 
-@bot.message_handler(content_types=['photo'])
-def handle_photo(message):
-    file_id = message.photo[-1].file_id
-    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-    print(f"Received photo with id: {file_id}")
-    bot.send_photo(message.chat.id, file_id)
+# @bot.message_handler(content_types=['photo'])
+# def handle_photo(message):
+#     file_id = message.photo[-1].file_id
+#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+#     print(f"Received photo with id: {file_id}")
+#     bot.send_photo(message.chat.id, file_id)
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
