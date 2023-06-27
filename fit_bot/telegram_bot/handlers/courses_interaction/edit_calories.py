@@ -54,6 +54,8 @@ def handle_meal_callback(call):
 
     if user_id not in user_data:
         user_data[user_id] = {current_day: {}}
+    if current_day not in user_data[user_id]:
+        user_data[user_id][current_day] = {}
     if meal not in user_data[user_id][current_day]:
         user_data[user_id][current_day][meal] = {}
     user_data[user_id][current_day]['selected_meal'] = meal
