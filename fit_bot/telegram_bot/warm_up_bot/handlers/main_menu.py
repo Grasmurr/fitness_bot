@@ -47,7 +47,7 @@ def start_message(message: Message):
     conn.commit()
     bot.set_state(user_id, States.enter_name, chat_id)
     sent_message = bot.send_photo(user_id,
-                                  photo='AgACAgIAAxkBAAIB62SBvAYVsNSOmu0dsjDGXqqHNF50AAIxyzEbta8RSLtRZv9ss1SSAQADAgADeQADLwQ',
+                                  photo='AgACAgIAAxkBAAMbZIICG7vmPW-HF4upkh_vcE8ow-EAAjHLMRu1rxFIeBaekTZNgEABAAMCAAN5AAMvBA',
                                   caption=f'👋 Привет, меня зовут Лиза\n\n'
                                           f'Я - виртуальный ассистент Ибрата, '
                                           f'готова принять вашу заявку на личную диагностику!\n\n'
@@ -75,7 +75,7 @@ def get_name(message: Message):
            'А теперь поделитесь, пожалуйста, *своим номером телефона*, чтобы Ибрат мог лично с вами связаться!\n\n' \
            '(Жмите на кнопку в меню)'
     sent_message = bot.send_photo(user_id,
-                                  photo='AgACAgIAAxkBAAIB7WSBvCk7Iocal_ss4QskerBkF9ZJAAIyyzEbta8RSCls76749M6ZAQADAgADeQADLwQ',
+                                  photo='AgACAgIAAxkBAAMeZIICMjDIy9mEldb9Joai0xPTt9sAAjLLMRu1rxFIjQX2LKMoskkBAAMCAAN5AAMvBA',
                                   caption=text,
                                   reply_markup=markup, parse_mode='Markdown')
     cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
@@ -105,7 +105,7 @@ def get_age(message: Message):
         button1 = InlineKeyboardButton(text='Погнали!', callback_data='Go!')
         markup.add(button1)
         sent_message = bot.send_voice(chat_id,
-                                      'AwACAgIAAxkBAAIBe2SAcF8hmzZQSJNDsKLI-3ZlXDX3AAJDLAAC3ckAAUg2ON27vliZXC8E',
+                                      'AgACAgIAAxkBAAMhZIICQ7oDNVB64dzT_URs8HLO96IAAjPLMRu1rxFIwmwTchHLlJMBAAMCAAN5AAMvBA',
                                       reply_markup=markup)
         cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
                        [sent_message.message_id, 'voice', user_id])
@@ -332,12 +332,12 @@ def describe_problem(message: Message):
 #     bot.send_voice(message.chat.id, file_id)
 
 
-# @bot.message_handler(content_types=['photo'])
-# def handle_photo(message):
-#     file_id = message.photo[-1].file_id
-#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-#     print(f"Received photo with id: {file_id}")
-#     bot.send_photo(message.chat.id, file_id)
+@bot.message_handler(content_types=['photo'])
+def handle_photo(message):
+    file_id = message.photo[-1].file_id
+    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+    print(f"Received photo with id: {file_id}")
+    bot.send_photo(message.chat.id, file_id)
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
