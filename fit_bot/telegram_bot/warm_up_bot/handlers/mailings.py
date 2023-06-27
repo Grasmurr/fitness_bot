@@ -103,7 +103,7 @@ def check_unfinished_users():
                     cursor.execute('UPDATE Users SET last_interaction_time = ?, '
                                    'notified = ? WHERE user_id = ?',
                                    [now.strftime('%Y-%m-%d %H:%M:%S'), notified + 1, user_id])
-        conn.commit()
+
     except apihelper.ApiException as e:
         error_code = e.result.status_code
         if error_code == 403:
@@ -114,6 +114,7 @@ def check_unfinished_users():
 
     except Exception as E:
         bot.send_message(305378717, f'Ошибка: {E}')
+    conn.commit()
 
 
 # def check_phoneless_users():
