@@ -27,7 +27,7 @@ def create_calories_add_or_remove_menu():
     button_back = types.InlineKeyboardButton("Назад", callback_data="back")
     markup.row(button_add_remove)
     markup.row(button_add_product)
-    # markup.row(button_redact)
+    markup.row(button_redact)
     markup.row(button_back)
     return markup
 
@@ -74,16 +74,21 @@ def return_calories_and_norm(user_model, day):
     }
 
     daily_norm = user_model.calories
+    daily_proteins_norm = user_model.proteins
     total_calories = sum(meal['calories'] for meal in user_data.values())
     remaining_calories = round(daily_norm - total_calories, 1)
 
-    return user_data, remaining_calories, daily_norm
+    total_proteins = sum(meal['protein'] for meal in user_data.values())
+    remaining_proteins = round(daily_proteins_norm - total_proteins, 1)
+
+    return user_data, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins
 
 
 def create_main_editing_menu(user, current_day):
-    user_calories, remaining_calories, daily_norm = return_calories_and_norm(user, current_day)
+    user_calories, remaining_calories, daily_norm, daily_proteins_norm,\
+        remaining_proteins = return_calories_and_norm(user, current_day)
     text = (
-        f"*Текущая норма: {daily_norm} ккал / {user_calories['breakfast']['protein']} г белка*\n\n"
+        f"*Текущая норма: {daily_norm} ккал / {daily_proteins_norm} г белка*\n\n"
         f"🍳 Завтрак\n"
         f"{user_calories['breakfast']['calories']} ккал / {user_calories['breakfast']['protein']} г белка\n\n"
         f"🥗 Обед\n"
@@ -95,7 +100,7 @@ def create_main_editing_menu(user, current_day):
         f"*🧾 Итого за день*\n"
         f"Ккал: {daily_norm - remaining_calories} ккал\n"
         f"Белка: {user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein']} г белка\n\n"
-        f"Вы еще можете съесть: {remaining_calories} ккал"
+        f"Вы еще можете съесть: {remaining_calories} ккал / {remaining_proteins}г белка"
     )
 
     markup = create_calories_menu()
@@ -110,11 +115,11 @@ def get_meal_info_text(meal_name, meal_data, user_meals):
             meals_text += f'- {i} - {user_meals[i]}\n'
     else:
         meals_text = 'Кажется, вы еще ничего не добавили!'
-
-    return f"🧾Вы съели на {meal_name}\n\n" \
-           f"Ккал: {meal_data['calories']}\n" \
-           f"Белка: {meal_data['protein']} г\n\n" \
-           f"📍Ранее вы добавили следующие продукты:\n\n{meals_text}"
+    text = (f"🧾Вы съели на {meal_name}\n\n"
+            f"Ккал: {meal_data['calories']}\n"
+            f"Белка: {meal_data['protein']} г\n\n"
+            f"📍Ранее вы добавили следующие продукты:\n\n{meals_text}")
+    return text, meals_text
 
 
 def create_keyboard_markup(*args):
@@ -126,26 +131,28 @@ def create_keyboard_markup(*args):
 
 
 def meal_info(user, current_day, user_data, user_id, meal):
-    user_calories, remaining_calories, daily_norm = return_calories_and_norm(user, current_day)
+    user_calories, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins\
+        = return_calories_and_norm(user, current_day)
 
     if meal == "breakfast":
-        text = get_meal_info_text("завтрак", user_calories['breakfast'], user_data[user_id][current_day]['breakfast'])
+        text, meals_text = get_meal_info_text("завтрак", user_calories['breakfast'], user_data[user_id][current_day]['breakfast'])
         markup = create_calories_add_or_remove_menu()
     elif meal == "lunch":
-        text = get_meal_info_text("обед", user_calories['lunch'], user_data[user_id][current_day]['lunch'])
+        text, meals_text = get_meal_info_text("обед", user_calories['lunch'], user_data[user_id][current_day]['lunch'])
         markup = create_calories_add_or_remove_menu()
     elif meal == "dinner":
-        text = get_meal_info_text("ужин", user_calories['dinner'], user_data[user_id][current_day]['dinner'])
+        text, meals_text = get_meal_info_text("ужин", user_calories['dinner'], user_data[user_id][current_day]['dinner'])
         markup = create_calories_add_or_remove_menu()
     elif meal == 'snack':
-        text = get_meal_info_text("перекусы", user_calories['snack'], user_data[user_id][current_day]['snack'])
+        text, meals_text = get_meal_info_text("перекусы", user_calories['snack'], user_data[user_id][current_day]['snack'])
         markup = create_calories_add_or_remove_menu()
     else:
         course_days = CourseDay.objects.filter(user=user).order_by('day')
         progress_text = ''
         for course_day in course_days:
             day_calories = course_day.total_calories
-            progress_text += f'День {course_day.day}: {day_calories} калорий\n'
+            day_proteins = course_day.total_protein
+            progress_text += f'День {course_day.day}: {day_calories} калорий / {day_proteins}г белка\n'
         text = f'🧾 Тут отчет о том, сколько калорий ты употреблял каждый день за весь период:' \
                f'\n\n#21FIT\n\n{progress_text}'
         markup = types.InlineKeyboardMarkup()
@@ -277,3 +284,13 @@ def one_five_markup(second=False):
     one_five.row(button1, button2, button3, button4, button5)
     one_five.add(button6)
     return one_five
+
+
+def redact_menu_markup(num):
+    markup = InlineKeyboardMarkup()
+    lst = [InlineKeyboardButton(text=f'{i}', callback_data=f'{i}') for i in range(1, num + 1)]
+    markup.row(*lst)
+    button6 = InlineKeyboardButton(text='Назад', callback_data='back')
+    markup.add(button6)
+
+    return markup

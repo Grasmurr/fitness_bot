@@ -61,5 +61,7 @@ class CourseInteraction(StatesGroup):
     continue_meal_name = State()
     enter_meal_calories = State()
     enter_meal_protein = State()
+    redacting = State()
+    delete_product = State()
 
 

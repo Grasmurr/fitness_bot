@@ -20,14 +20,15 @@ def calories_info(message: Message):
         bot.send_message(user_id, 'Курс начнется со следующего дня! '
                                   'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
     else:
-        user_calories, remaining_calories, daily_norm = return_calories_and_norm(user_model, current_day)
+        user_calories, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins = \
+            return_calories_and_norm(user_model, current_day)
 
         if daily_norm * 0.3 > remaining_calories:
             text = "❗️Вы переели свою норму ккал, ваш результат на 70% зависит от вашего питания, " \
                    "поэтому желательно больше ничего не есть за сегодня…\n\n" \
                    "Если крайне тяжело, то лучше отдать предпочтение овощам (огурцы, капуста, броколли, помидоры…)"
         else:
-            text = f"🔥Вам можно съесть еще: {remaining_calories} ккал"
+            text = f"🔥Вам можно съесть еще: {remaining_calories} ккал / {remaining_proteins}г белка"
         bot.send_message(user_id, text)
 
 

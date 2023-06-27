@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pytz
 import sqlite3
 from telebot.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from telebot import apihelper
 
 import schedule
 import time
@@ -103,6 +104,14 @@ def check_unfinished_users():
                                    'notified = ? WHERE user_id = ?',
                                    [now.strftime('%Y-%m-%d %H:%M:%S'), notified + 1, user_id])
         conn.commit()
+    except apihelper.ApiException as e:
+        error_code = e.result.status_code
+        if error_code == 403:
+            bot.send_message(305378717, f"User {user_id} blocked the bot. Removing from the database.")
+            cursor.execute('DELETE FROM Users WHERE user_id = ?', [user_id])
+        else:
+            bot.send_message(305378717, f"Error {error_code}: {e.result.reason}")
+
     except Exception as E:
         bot.send_message(305378717, f'Ошибка: {E}')
 
