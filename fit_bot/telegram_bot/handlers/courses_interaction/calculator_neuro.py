@@ -68,12 +68,26 @@ def handle_new_product(message: Message):
         calories_data[user_id]['chosen_dish'] = answer
         bot.send_message(user_id, 'Выберите один из предложенных вариантов:', reply_markup=ReplyKeyboardRemove())
         text_answer, data, list_for_me, one_five = food_choosing_menu(answer, user_id)
-        calories_data[user_id]['needed_data'] = [data, list_for_me]
-        calories_data[user_id]['variants'] = text_answer
-        calories_data[user_id]['needed_data_keyboard'] = one_five
-        bot.send_message(user_id, text=f'{text_answer}', reply_markup=one_five)
-        calories_data[user_id]['needed_data'] = [data, list_for_me]
-        bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
+        if text_answer:
+
+            calories_data[user_id]['needed_data'] = [data, list_for_me]
+            calories_data[user_id]['variants'] = text_answer
+            calories_data[user_id]['needed_data_keyboard'] = one_five
+            bot.send_message(user_id, text=f'{text_answer}', reply_markup=one_five)
+            calories_data[user_id]['needed_data'] = [data, list_for_me]
+            bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
+        else:
+            markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                            'Сколько еще можно ккал?👀', 'Появились вопросики...')
+            bot.set_state(user_id, CourseInteraction.initial, chat_id)
+            bot.send_message(user_id, text=f'Кажется, в нашей базе нет такого продукта.\n\n'
+                                           f'Попробуйте запустить процесс поиска снова или введите продукт '
+                                           f'вручную', reply_markup=markup)
+            user = PaidUser.objects.get(user=user_id)
+            current_day = (timezone.now().date() - user.paid_day).days
+            text, markup = meal_info(user, current_day, user_data, user_id, meal)
+
+            bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
 
 
 @bot.callback_query_handler(state=CourseInteraction.choose_product, func=lambda call: call.data)

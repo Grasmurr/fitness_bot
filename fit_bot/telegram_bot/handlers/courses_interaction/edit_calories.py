@@ -59,7 +59,6 @@ def handle_meal_callback(call):
     if meal not in user_data[user_id][current_day]:
         user_data[user_id][current_day][meal] = {}
     user_data[user_id][current_day]['selected_meal'] = meal
-
     text, markup = meal_info(user, current_day, user_data, user_id, meal)
 
     bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup)

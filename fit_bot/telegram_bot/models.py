@@ -58,6 +58,7 @@ class PaidUser(models.Model):
 class CourseDay(models.Model):
     user = models.ForeignKey(PaidUser, on_delete=models.CASCADE)
     day = models.IntegerField()
+    has_requested = models.BooleanField(default=False)
     total_calories = models.IntegerField(default=0)
     total_protein = models.IntegerField(default=0)
     total_fat = models.IntegerField(default=0)

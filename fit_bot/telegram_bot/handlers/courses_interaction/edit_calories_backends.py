@@ -87,20 +87,26 @@ def return_calories_and_norm(user_model, day):
 def create_main_editing_menu(user, current_day):
     user_calories, remaining_calories, daily_norm, daily_proteins_norm,\
         remaining_proteins = return_calories_and_norm(user, current_day)
+
+    if remaining_calories < 0:
+        remaining_calories = '0'
+    if remaining_proteins < 0:
+        remaining_proteins = '0'
+
     text = (
         f"*Текущая норма: {daily_norm} ккал / {daily_proteins_norm} г белка*\n\n"
-        f"🍳 Завтрак\n"
+        f"*🍳 Завтрак:*\n"
         f"{user_calories['breakfast']['calories']} ккал / {user_calories['breakfast']['protein']} г белка\n\n"
-        f"🥗 Обед\n"
+        f"*🥗 Обед:*\n"
         f"{user_calories['lunch']['calories']} ккал / {user_calories['lunch']['protein']} г белка\n\n"
-        f"🍲 Ужин\n"
+        f"*🍲 Ужин:*\n"
         f"{user_calories['dinner']['calories']} ккал / {user_calories['dinner']['protein']} г белка\n\n"
-        f"🍏 Перекусы\n"
+        f"*🍏 Перекусы:*\n"
         f"{user_calories['snack']['calories']} ккал / {user_calories['snack']['protein']} г белка\n\n"
-        f"*🧾 Итого за день*\n"
+        f"*🧾 Итого за день:*\n"
         f"Ккал: {daily_norm - remaining_calories} ккал\n"
         f"Белка: {user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein']} г белка\n\n"
-        f"Вы еще можете съесть: {remaining_calories} ккал / {remaining_proteins}г белка"
+        f"*Вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
     )
 
     markup = create_calories_menu()
@@ -289,6 +295,7 @@ def one_five_markup(second=False):
 def redact_menu_markup(num):
     markup = InlineKeyboardMarkup()
     lst = [InlineKeyboardButton(text=f'{i}', callback_data=f'{i}') for i in range(1, num + 1)]
+    # markup.add(*lst, row_width=3)
     markup.row(*lst)
     button6 = InlineKeyboardButton(text='Назад', callback_data='back')
     markup.add(button6)
