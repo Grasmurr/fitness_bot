@@ -66,10 +66,10 @@ def handle_new_product(message: Message):
         bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
     else:
         calories_data[user_id]['chosen_dish'] = answer
-        bot.send_message(user_id, 'Выберите один из предложенных вариантов:', reply_markup=ReplyKeyboardRemove())
+
         text_answer, data, list_for_me, one_five = food_choosing_menu(answer, user_id)
         if text_answer:
-
+            bot.send_message(user_id, 'Выберите один из предложенных вариантов:', reply_markup=ReplyKeyboardRemove())
             calories_data[user_id]['needed_data'] = [data, list_for_me]
             calories_data[user_id]['variants'] = text_answer
             calories_data[user_id]['needed_data_keyboard'] = one_five
