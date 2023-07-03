@@ -3,6 +3,3 @@
 lib
 bin
 src
-fit_bot/telegram_bot/data/config.py
-fit_bot/telegram_bot/support_bot/data/config.py
-fit_bot/telegram_bot/warm_up_bot/data/config.py
