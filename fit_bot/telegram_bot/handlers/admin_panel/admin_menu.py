@@ -1,87 +1,16 @@
-from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, CallbackQuery
+from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, \
+    CallbackQuery, ReplyKeyboardRemove
+from telebot import custom_filters
 from ...loader import bot
 from ...filters.is_admin import IsAdminFilter
-from ...states import States
+from ...states import States, AdminStates
 from ...models import PaidUser, UnpaidUser, FinishedUser
 from ...handlers.mainmenu import paid_user_main_menu
-
+from ..courses_interaction.edit_calories_backends import create_keyboard_markup, get_id
 
 from courses.models import Категории, Video
 
-
 admin_data = {}
-
-
-@bot.message_handler(commands=['admin'], is_admin=True)
-def what(message: Message):
-    user_id = message.from_user.id
-    if user_id not in admin_data:
-        admin_data[user_id] = {}
-    admin_data[user_id]['state'] = States.MAILING
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    button1 = KeyboardButton('Рассылка')
-    button2 = KeyboardButton('Загрузить видео')
-    button3 = KeyboardButton('Вернуться назад')
-    markup.add(button1)
-    markup.add(button2)
-    markup.add(button3)
-    bot.send_message(chat_id=message.chat.id,
-                     text='Это админ-панель! Пожалуйста, выберите что вы хотите сделать нажав на кнопку ниже',
-                     reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message: message.text == 'Рассылка', is_admin=True)
-def mailing(message: Message):
-    if admin_data[message.from_user.id]['state'] == States.MAILING:
-        admin_data[message.from_user.id]['state'] = States.CHOOSING_MAILING_CATEGORY
-
-        markup = ReplyKeyboardMarkup(resize_keyboard=True)
-        button1 = KeyboardButton('Рассылка по PaidUsers')
-        button2 = KeyboardButton('Рассылка по FinishedUsers')
-        button3 = KeyboardButton('Рассылка по Unpaid')
-        button4 = KeyboardButton('Вернуться назад')
-        markup.add(button1)
-        markup.add(button2)
-        markup.add(button3)
-        markup.add(button4)
-        bot.send_message(chat_id=message.chat.id,
-                         text='Пожалуйста, уточните категорию рассылки', reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.CHOOSING_MAILING_CATEGORY and message.text == 'Вернуться назад', is_admin=True)
-def unpaid_mailing(message: Message):
-    what(message)
-
-
-@bot.message_handler(func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.MAILING and message.text == 'Вернуться назад', is_admin=True)
-def back_home_from_mailing(message: Message):
-    paid_user_main_menu(message)
-
-
-@bot.message_handler(func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.MAILING and message.text == 'Загрузить видео', is_admin=True)
-def upload(message: Message):
-    user_id = message.from_user.id
-    admin_data[user_id]['state'] = States.UPLOAD_VIDEO
-    bot.send_message(user_id, "Пожалуйста, загрузите видео")
-
-
-@bot.message_handler(content_types=['video'], func=lambda message: message.from_user.id in admin_data and admin_data[message.from_user.id]['state'] == States.UPLOAD_VIDEO, is_admin=True)
-def handle_video_upload(message: Message):
-    user_id = message.from_user.id
-    video = message.video
-    video_file_id = video.file_id
-
-    # Получение названия видео (если оно было указано в подписи к видео)
-    video_name = message.video.file_name
-
-    # Создание и сохранение объекта Video в базе данных
-    new_video = Video(name=video_name, video_file_id=video_file_id)
-    new_video.save()
-
-    # Возвращение пользователя в состояние MAILING и отправка сообщения об успешной загрузке видео
-    admin_data[user_id]['state'] = States.MAILING
-    bot.send_message(user_id, "Видео успешно загружено и сохранено")
-    what(message)
 
 
 def create_categories_keyboard(for_unpaid=False):
@@ -98,53 +27,75 @@ def create_categories_keyboard(for_unpaid=False):
     return markup
 
 
-@bot.message_handler(func=lambda message: message.text == 'Рассылка по Unpaid', is_admin=True)
-def unpaid_mailing(message: Message):
-    user_id = message.from_user.id
-    if user_id in admin_data:
-        if admin_data[user_id]['state'] == States.CHOOSING_MAILING_CATEGORY:
+@bot.message_handler(commands=['admin'], is_admin=True)
+def what(message: Message):
+    user_id, chat_id = get_id(message=message)
+    if user_id not in admin_data:
+        admin_data[user_id] = {'state': None}
+    bot.set_state(user_id, AdminStates.initial, chat_id)
+    markup = create_keyboard_markup('Рассылка', 'Загрузить видео', 'Вернуться назад')
+    bot.send_message(user_id, 'Это админ-панель! Пожалуйста, выберите что вы хотите сделать нажав на кнопку ниже',
+                     reply_markup=markup)
+
+
+@bot.message_handler(state=AdminStates.initial, content_types=['text'])
+def mailing(message: Message):
+    user_id, chat_id = get_id(message=message)
+    answer = message.text
+    if answer == 'Рассылка':
+        markup = create_keyboard_markup('Рассылка по PaidUsers', 'Рассылка по FinishedUsers',
+                                        'Рассылка по Unpaid', 'Вернуться назад')
+        bot.send_message(user_id, 'Пожалуйста, уточните категорию рассылки', reply_markup=markup)
+        bot.set_state(user_id, AdminStates.choosing_mailing_category, chat_id)
+    elif answer == 'Вернуться назад':
+        paid_user_main_menu(message)
+    else:
+        markup = create_keyboard_markup('Назад!')
+        bot.send_message(user_id, text="Пожалуйста, загрузите видео:", reply_markup=markup)
+        bot.set_state(user_id, AdminStates.upload_video, chat_id)
+
+
+@bot.message_handler(state=AdminStates.upload_video, content_types=['text', 'video'])
+def handle_video_upload(message: Message):
+    user_id, chat_id = get_id(message=message)
+    if message.video:
+        video = message.video
+        video_file_id = video.file_id
+        video_name = message.video.file_name
+        new_video = Video(name=video_name, video_file_id=video_file_id)
+        new_video.save()
+        bot.send_message(user_id, "Видео успешно загружено и сохранено")
+        what(message)
+    else:
+        what(message)
+
+
+@bot.message_handler(state=AdminStates.choosing_mailing_category, content_types=['text'])
+def handle_mailing(message: Message):
+    user_id, chat_id = get_id(message=message)
+    answer = message.text
+
+    if answer in ['Рассылка по PaidUsers', 'Рассылка по FinishedUsers', 'Рассылка по Unpaid']:
+        if answer in ['Рассылка по PaidUsers', 'Рассылка по FinishedUsers']:
+            if answer == 'Рассылка по PaidUsers':
+                admin_data[user_id]['category_of_mailing'] = 'PaidUser'
+            else:
+                admin_data[user_id]['category_of_mailing'] = 'FinishedUser'
+            markup = create_categories_keyboard()
+            text = 'Пожалуйста, выберите категорию для рассылки сообщений:\n'
+            text += '\n'.join(
+                [f'{index} - {category.название}' for index, category in enumerate(Категории.objects.all(), start=1)])
+        else:
             admin_data[user_id]['category_of_mailing'] = 'UnpaidUser'
             markup = create_categories_keyboard(for_unpaid=True)
-            markup.add(InlineKeyboardButton(text='По всем пользователям', callback_data='category_all'))
-            bot.send_message(chat_id=message.chat.id,
-                             text=f'Пожалуйста, выберите категорию для рассылки сообщений:',
-                             reply_markup=markup)
+            text = 'Пожалуйста, выберите категорию для рассылки сообщений:'
 
-
-@bot.message_handler(func=lambda message: message.text == 'Рассылка по PaidUsers', is_admin=True)
-def paid_mailing(message: Message):
-    user_id = message.from_user.id
-    if user_id in admin_data:
-        if admin_data[user_id]['state'] == States.CHOOSING_MAILING_CATEGORY:
-            admin_data[user_id]['category_of_mailing'] = 'PaidUser'
-            markup = create_categories_keyboard()
-            categories_text = '\n'.join([f'{index} - {category.название}' for index, category in enumerate(Категории.objects.all(), start=1)])
-            markup.add(InlineKeyboardButton(text='По всем пользователям', callback_data='category_all'))
-            bot.send_message(chat_id=message.chat.id,
-                             text=f'Пожалуйста, выберите категорию для рассылки сообщений:\n{categories_text}',
-                             reply_markup=markup)
-
-
-@bot.message_handler(func=lambda message: message.text == 'Рассылка по FinishedUsers', is_admin=True)
-def finished_mailing(message: Message):
-    user_id = message.from_user.id
-    if user_id in admin_data:
-        if admin_data[user_id]['state'] == States.CHOOSING_MAILING_CATEGORY:
-            admin_data[user_id]['category_of_mailing'] = 'FinishedUser'
-            markup = create_categories_keyboard()
-            categories_text = '\n'.join([f'{index} - {category.название}' for index, category in enumerate(Категории.objects.all(), start=1)])
-            markup.add(InlineKeyboardButton(text='По всем пользователям', callback_data='category_all'))
-            bot.send_message(chat_id=message.chat.id,
-                             text=f'Пожалуйста, выберите категорию для рассылки сообщений:\n{categories_text}',
-                             reply_markup=markup)
-
-
-def create_message_type_keyboard():
-    markup = InlineKeyboardMarkup()
-    button1 = InlineKeyboardButton('Текст', callback_data='message_type_text')
-    button2 = InlineKeyboardButton('Фото', callback_data='message_type_photo')
-    markup.add(button1, button2)
-    return markup
+        markup.add(InlineKeyboardButton(text='По всем пользователям', callback_data='category_all'))
+        bot.send_message(chat_id=message.chat.id,
+                         text=text,
+                         reply_markup=markup)
+    else:
+        what(message)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('category_'))
@@ -157,7 +108,10 @@ def category_callback(call: CallbackQuery):
 
     # Сохранение выбранной категории в admin_data
     admin_data[call.from_user.id]['category'] = selected_category
-    markup = create_message_type_keyboard()
+    markup = InlineKeyboardMarkup()
+    button1 = InlineKeyboardButton('Текст', callback_data='message_type_text')
+    button2 = InlineKeyboardButton('Фото', callback_data='message_type_photo')
+    markup.add(button1, button2)
     if selected_category == 'all':
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text=f'Выберите тип сообщения для рассылки по всем пользователям:',
@@ -334,3 +288,6 @@ def send_photo_callback(call: CallbackQuery):
                               text='Отправка фотографии отменена.')
 
     bot.answer_callback_query(call.id)
+
+
+bot.add_custom_filter(custom_filters.StateFilter(bot))

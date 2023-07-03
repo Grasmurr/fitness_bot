@@ -1,5 +1,4 @@
-from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton,\
-    ReplyKeyboardRemove
+from telebot.types import Message
 from telebot import custom_filters
 from django.utils import timezone
 
@@ -7,8 +6,8 @@ from django.utils import timezone
 from ...loader import bot
 from ...states import CourseInteraction
 from courses.models import Категории, Content, Mailing, Training
-from ...models import PaidUser, UnpaidUser
-from ..mainmenu import get_id, create_keyboard_markup, create_inline_markup
+from ...models import PaidUser
+from ..mainmenu import get_id
 
 
 @bot.message_handler(state=CourseInteraction.initial, func=lambda message: message.text == 'Получить тренировки 🎾')

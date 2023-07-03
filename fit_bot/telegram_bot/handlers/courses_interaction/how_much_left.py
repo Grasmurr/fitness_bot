@@ -2,10 +2,9 @@ from telebot.types import Message
 from django.utils import timezone
 from telebot import custom_filters
 
-from .edit_calories import user_data
 from ...loader import bot
 from ...states import CourseInteraction
-from ...models import PaidUser, UnpaidUser
+from ...models import PaidUser
 from .edit_calories_backends import get_id, return_calories_and_norm
 
 

@@ -1,27 +1,14 @@
-import csv
-import re
-from collections import Counter
-
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove, CallbackQuery
 from telebot import custom_filters
 from django.utils import timezone
-from telebot import types
-import re
-import requests
-import json
-import csv
-from collections import Counter
 
-from .edit_calories_backends import create_calories_menu,\
-    create_calories_add_or_remove_menu, return_calories_and_norm, get_id, \
-    create_main_editing_menu, get_meal_info_text, create_keyboard_markup, meal_info, check_correctness, \
+from .edit_calories_backends import get_id, create_keyboard_markup, meal_info, \
     update_courseday_calories, update_meal, one_five_markup, food_choosing_menu
 from ...loader import bot
-from ...states import States, CourseInteraction
-from ...models import PaidUser, UnpaidUser, CourseDay, Meal
+from ...states import CourseInteraction
+from ...models import PaidUser, CourseDay, Meal
 from ..mainmenu import paid_user_main_menu
 from .edit_calories import user_data
-
 
 calories_data = {}
 
@@ -44,7 +31,7 @@ def add_new_product(call: CallbackQuery):
     text = "⚡️Я тут, готова помочь!\n\n" \
            "- Введите текстом название продукта/блюда"
     markup = create_keyboard_markup('Отмена!')
-    bot.set_state(user_id, CourseInteraction.enter_new_product)
+    bot.set_state(user_id, CourseInteraction.enter_new_product, chat_id)
     bot.send_photo(photo='AgACAgIAAxkBAAIlvGSZZSve3u6eHwdvffFT25_CmUgxAALfyzEbqbHRSCITmUvvInNJAQADAgADeQADLwQ',
                    caption=text, chat_id=chat_id, reply_markup=markup)
     # bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
@@ -127,8 +114,9 @@ def handle_choosen_product(call: CallbackQuery):
                 answer_text += f"{nutrient_name}: {value}\n"
                 calories_data[user_id]['KBJU_data'].append(int(value))
 
-        calories_data[user_id]['chosen_dish'] = [calories_data[user_id]["needed_data"][1][calories_data[user_id]["chosen_number"]],
-                                                 calories_data[user_id]['KBJU_data']]
+        calories_data[user_id]['chosen_dish'] = \
+            [calories_data[user_id]["needed_data"][1][calories_data[user_id]["chosen_number"]],
+             calories_data[user_id]['KBJU_data']]
 
         bot.edit_message_text(chat_id=user_id, text=answer_text,
                               message_id=call.message.message_id, reply_markup=markup)
@@ -171,8 +159,10 @@ def handle_grams_count(message: Message):
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
         user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
-            f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] = f"{int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100)} ккал {int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100)}г белков"
-        # bot.send_message(user_id, text=f"{user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']]}")
+            f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] = \
+            f"{int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100)} ккал " \
+            f"{int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100)}г белков"
+
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,
                                              meal_type=user_data[user_id][current_day]['selected_meal'])
@@ -203,10 +193,14 @@ def handle_amount(call: CallbackQuery):
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
         user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
-            f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] = f"{int(calories_data[user_id]['KBJU_data'][0]) * amount} ккал {int(calories_data[user_id]['KBJU_data'][1]) * amount}г белков"
-        # bot.send_message(user_id, text=f"{user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']]}")
+            f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] \
+            = f"{int(calories_data[user_id]['KBJU_data'][0]) * amount} ккал " \
+              f"{int(calories_data[user_id]['KBJU_data'][1]) * amount}г белков"
+        # bot.send_message(user_id, text=f"{user_data[user_id][current_day][user_data[user_id]
+        # [current_day]['selected_meal']]}")
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
-        meal, _ = Meal.objects.get_or_create(course_day=course_day, meal_type=user_data[user_id][current_day]['selected_meal'])
+        meal, _ = Meal.objects.get_or_create(course_day=course_day,
+                                             meal_type=user_data[user_id][current_day]['selected_meal'])
         update_meal(meal,
                     int(calories_data[user_id]['KBJU_data'][0]) * amount,  # калории
                     int(calories_data[user_id]['KBJU_data'][1]) * amount)
@@ -217,16 +211,6 @@ def handle_amount(call: CallbackQuery):
                                  meal=user_data[user_id][current_day]['selected_meal'])
         bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
-
-
-
-
-
-# def preprocess(text):
-#     return re.findall(r'\b\w+\b', text.lower())
-#
-#
-
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))

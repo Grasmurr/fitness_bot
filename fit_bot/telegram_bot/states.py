@@ -65,3 +65,9 @@ class CourseInteraction(StatesGroup):
     delete_product = State()
 
 
+class AdminStates(StatesGroup):
+    initial = State()
+    mailing = State()
+    choosing_mailing_category = State()
+    upload_video = State()
+
