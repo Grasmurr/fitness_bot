@@ -73,8 +73,8 @@ def return_calories_and_norm(user_model, day):
         }
     }
 
-    daily_norm = user_model.calories
-    daily_proteins_norm = user_model.proteins
+    daily_norm = int(user_model.calories)
+    daily_proteins_norm = int(user_model.proteins)
     total_calories = sum(meal['calories'] for meal in user_data.values())
     remaining_calories = round(daily_norm - total_calories, 1)
 
@@ -104,7 +104,7 @@ def create_main_editing_menu(user, current_day):
         f"*🍏 Перекусы:*\n"
         f"{user_calories['snack']['calories']} ккал / {user_calories['snack']['protein']} г белка\n\n"
         f"*🧾 Итого за день:*\n"
-        f"Ккал: {daily_norm - remaining_calories} ккал\n"
+        f"Ккал: {int(daily_norm) - int(remaining_calories)} ккал\n"
         f"Белка: {user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein']} г белка\n\n"
         f"*Вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
     )

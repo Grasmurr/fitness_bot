@@ -157,7 +157,7 @@ def continue_handle_choose_product(call: CallbackQuery):
         bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
     else:
         dish = calories_data[user_id]['chosen_dish'][0]
-        if 'штука' or 'порция' in dish.lower():
+        if 'штука' in dish.lower() or 'порция' in dish.lower():
             if 'штука' in dish.lower():
                 text = f"Выберите количество штук для продукта {dish}"
             else:
@@ -200,7 +200,7 @@ def handle_grams_count(message: Message):
 
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  meal=user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
 
@@ -235,7 +235,7 @@ def handle_amount(call: CallbackQuery):
 
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  meal=user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
 

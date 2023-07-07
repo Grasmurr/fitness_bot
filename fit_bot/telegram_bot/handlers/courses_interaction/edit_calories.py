@@ -16,24 +16,24 @@ for_meal_from_user = {}
 
 @bot.message_handler(state=CourseInteraction.initial, func=lambda message: message.text == 'Мой дневник калорий 📆')
 def handle_update_calories(message: Message):
-    try:
-        user_id, chat_id = get_id(message=message)
+    # try:
+    user_id, chat_id = get_id(message=message)
 
-        user = PaidUser.objects.get(user=user_id)
-        current_day = (timezone.now().date() - user.paid_day).days
+    user = PaidUser.objects.get(user=user_id)
+    current_day = int((timezone.now().date() - user.paid_day).days)
 
-        if current_day == 0:
-            bot.send_message(user_id, 'Курс начнется со следующего дня! '
-                                      'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
+    if current_day == 0:
+        bot.send_message(user_id, 'Курс начнется со следующего дня! '
+                                  'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
 
-        elif 0 < current_day < 22:
-            text, markup = create_main_editing_menu(user, current_day)
-            bot.send_message(user_id, text, reply_markup=markup, parse_mode='Markdown')
+    elif 0 < current_day < 22:
+        text, markup = create_main_editing_menu(user, current_day)
+        bot.send_message(user_id, text, reply_markup=markup, parse_mode='Markdown')
 
-        else:
-            bot.send_message(user_id, 'Кажется, курс закончился!')
-    except Exception as E:
-        bot.send_message(305378717, f"Ошибка {E}")
+    else:
+        bot.send_message(user_id, 'Кажется, курс закончился!')
+    # except Exception as E:
+    #     bot.send_message(305378717, f"Ошибка {E}")
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial,
@@ -236,18 +236,32 @@ def delete_or_not_product(call: CallbackQuery):
         current_day = (timezone.now().date() - user.paid_day).days
 
         keyboard_markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                        'Сколько еще можно ккал?👀', 'Появились вопросики...')
+                                                 'Сколько еще можно ккал?👀', 'Появились вопросики...')
 
         bot.send_message(user_id, 'Главное меню', reply_markup=keyboard_markup)
 
-        selected_to_delete = \
-            user_data[user_id][current_day]['variants_to_delete'][
-                user_data[user_id][current_day]['selected_meal_to_delete']]
+        course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
+        meal, _ = Meal.objects.get_or_create(course_day=course_day,
+                                             meal_type=user_data[user_id][current_day]['selected_meal'])
 
-        user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']].pop(selected_to_delete, None)
-        bot.send_message(user_id,
-                         text=f'{selected_to_delete} - '
-                              f'{user_data[user_id][current_day][user_data[user_id][current_day]["selected_meal"]]}')
+        selected_to_delete = user_data[user_id][current_day]['variants_to_delete'][
+            user_data[user_id][current_day]['selected_meal_to_delete']].split("-")[-1].strip()
+
+        calories, _, protein, _ = selected_to_delete.split()
+
+        calories = int(calories)
+        protein = int(protein[:-1])
+
+        meal.calories -= calories
+        meal.protein -= protein
+
+        meal.save()
+
+        for product, value in list(
+                user_data[user_id][current_day][user_data[user_id][current_day]["selected_meal"]].items()):
+            if value == selected_to_delete:
+                del user_data[user_id][current_day][user_data[user_id][current_day]["selected_meal"]][product]
+
         bot.edit_message_text('удалено!', chat_id, call.message.message_id, reply_markup=None)
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
