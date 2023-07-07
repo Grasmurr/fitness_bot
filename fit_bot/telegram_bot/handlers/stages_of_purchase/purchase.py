@@ -12,7 +12,7 @@ from ...states import PurchaseStates
 from ...models import UnpaidUser, PaidUser, BankCards
 
 ADMIN_CHAT_ID = 58790442
-ADMIN_CHAT_ID = 305378717
+# ADMIN_CHAT_ID = 305378717
 user_data = {}
 
 

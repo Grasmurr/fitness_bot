@@ -53,7 +53,7 @@ def handle_meal_callback(call):
     user_data[user_id][current_day]['selected_meal'] = meal
     text, markup = meal_info(user, current_day, user_data, user_id, meal)
 
-    bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup)
+    bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup, parse_mode='Markdown')
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'back')
@@ -74,9 +74,8 @@ def handle_add_remove_callback(call):
 
     text = "Для начала, введите название блюда"
 
-    bot.edit_message_text(text=text, chat_id=chat_id,
-                          message_id=call.message.message_id, reply_markup=None)
-    bot.send_message(user_id, 'Попробуйте: ', reply_markup=markup)
+    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+    bot.send_message(user_id, text=text, reply_markup=markup)
     bot.set_state(user_id, CourseInteraction.enter_meal_name, chat_id)
 
 
@@ -93,8 +92,8 @@ def handle_entered_meal_name(message: Message):
             for_meal_from_user[user_id] = {}
         for_meal_from_user[user_id]['name'] = answer
         markup = create_keyboard_markup('Продолжить', 'Изменить', 'Отмена!')
-        bot.send_message(user_id, f'Хорошо! Вы добавляете "{answer}". Продолжить, '
-                                  f'изменить или отменить?', reply_markup=markup)
+        bot.send_message(user_id, f'Хорошо! Вы добавляете "*{answer}*". \n\nПродолжить, '
+                                  f'изменить или отменить?', reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.continue_meal_name, chat_id)
 
 
@@ -103,7 +102,8 @@ def handle_meal_name(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
     if answer == 'Продолжить':
-        bot.send_message(user_id, 'Хорошо! Введите количество калорий для блюда.', reply_markup=ReplyKeyboardRemove())
+        bot.send_message(user_id, 'Введите четко подсчитанное количество *калорий*:',
+                         reply_markup=ReplyKeyboardRemove(), parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.enter_meal_calories, chat_id)
     elif answer == 'Изменить':
         markup = create_keyboard_markup('Отмена!')
@@ -121,7 +121,7 @@ def handle_meal_calories(message: Message):
     answer = message.text
     if answer.isdigit() and 0 < int(answer) < 5000:
         for_meal_from_user[user_id]['calories'] = answer
-        bot.send_message(user_id, 'Хорошо! А теперь введите количество белков для данного продукта:')
+        bot.send_message(user_id, 'Введите количество *белка* для данного продукта:', parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
     else:
         bot.send_message(user_id, 'Кажется, вы ввели что-то неправильно. Попробуйте снова.')
@@ -136,7 +136,6 @@ def handle_meal_calories(message: Message):
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
 
-        bot.send_message(user_id, 'Замечательно!')
         paid_user_main_menu(message)
 
         user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
@@ -154,7 +153,7 @@ def handle_meal_calories(message: Message):
 
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
     else:
@@ -222,7 +221,7 @@ def handle_redacting(call: CallbackQuery):
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  user_data[user_id][current_day]['selected_meal'])
 
-        bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup)
+        bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
 
@@ -236,15 +235,10 @@ def delete_or_not_product(call: CallbackQuery):
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
 
-        text, markup = meal_info(user, current_day, user_data, user_id,
-                                 user_data[user_id][current_day]['selected_meal'])
-
         keyboard_markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
                                         'Сколько еще можно ккал?👀', 'Появились вопросики...')
 
         bot.send_message(user_id, 'Главное меню', reply_markup=keyboard_markup)
-
-
 
         selected_to_delete = \
             user_data[user_id][current_day]['variants_to_delete'][

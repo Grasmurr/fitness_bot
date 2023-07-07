@@ -155,7 +155,7 @@ def change_calories_norm():
 schedule.every().day.at("01:00").do(change_calories_norm)
 schedule.every().day.at("09:00").do(send_daily_content)
 schedule.every().day.at("18:00").do(check_calories)
-schedule.every().day.at("11:00").do(check_for_daily_content)
+schedule.every().day.at("20:00").do(check_for_daily_content)
 schedule.every(1).minutes.do(check_unfinished_users)
 
 

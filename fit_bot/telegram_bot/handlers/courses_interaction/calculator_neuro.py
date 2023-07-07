@@ -50,7 +50,7 @@ def handle_new_product(message: Message):
     if answer == 'Отмена!':
         paid_user_main_menu(message)
         bot.send_message(user_id, 'Отменено!')
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
     else:
         calories_data[user_id]['chosen_dish'] = answer
 
@@ -64,17 +64,40 @@ def handle_new_product(message: Message):
             calories_data[user_id]['needed_data'] = [data, list_for_me]
             bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
         else:
-            markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                            'Сколько еще можно ккал?👀', 'Появились вопросики...')
-            bot.set_state(user_id, CourseInteraction.initial, chat_id)
+            markup = InlineKeyboardMarkup()
+            button1 = InlineKeyboardButton(text='Попробовать снова', callback_data='try_again')
+            button2 = InlineKeyboardButton(text='Ввести вручную', callback_data='by_hand')
+            markup.add(button1)
+            markup.add(button2)
+
             bot.send_message(user_id, text=f'Кажется, в нашей базе нет такого продукта.\n\n'
                                            f'Попробуйте запустить процесс поиска снова или введите продукт '
                                            f'вручную', reply_markup=markup)
-            user = PaidUser.objects.get(user=user_id)
-            current_day = (timezone.now().date() - user.paid_day).days
-            text, markup = meal_info(user, current_day, user_data, user_id, meal)
 
-            bot.send_message(text=text, chat_id=chat_id, reply_markup=markup)
+            #
+            # markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+            #                                 'Сколько еще можно ккал?👀', 'Появились вопросики...')
+            # bot.set_state(user_id, CourseInteraction.initial, chat_id)
+
+            # user = PaidUser.objects.get(user=user_id)
+            # current_day = (timezone.now().date() - user.paid_day).days
+            # text, markup = meal_info(user, current_day, user_data, user_id, meal)
+            #
+            # bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+
+
+@bot.callback_query_handler(state=CourseInteraction.enter_new_product, func=lambda call: call.data)
+def handle_new_product(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
+    answer = call.data
+
+    if answer == 'try_again':
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Введите название продукта снова:', reply_markup=None)
+    else:
+        text = "В таком случае введите название блюда:"
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id, text=text, reply_markup=None)
+        bot.set_state(user_id, CourseInteraction.enter_meal_name, chat_id)
 
 
 @bot.callback_query_handler(state=CourseInteraction.choose_product, func=lambda call: call.data)
@@ -134,8 +157,11 @@ def continue_handle_choose_product(call: CallbackQuery):
         bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
     else:
         dish = calories_data[user_id]['chosen_dish'][0]
-        if 'штука' in dish.lower():
-            text = f"Выберите количество штук для продукта {dish}"
+        if 'штука' or 'порция' in dish.lower():
+            if 'штука' in dish.lower():
+                text = f"Выберите количество штук для продукта {dish}"
+            else:
+                text = f"Выберите количество порций для продукта {dish}"
             one_five = one_five_markup(second=True)
             bot.edit_message_text(chat_id=chat_id, text=text, message_id=call.message.message_id,
                                   reply_markup=one_five)

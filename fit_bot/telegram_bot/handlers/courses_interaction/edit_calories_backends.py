@@ -121,9 +121,9 @@ def get_meal_info_text(meal_name, meal_data, user_meals):
             meals_text += f'- {i} - {user_meals[i]}\n'
     else:
         meals_text = 'Кажется, вы еще ничего не добавили!'
-    text = (f"🧾Вы съели на {meal_name}\n\n"
-            f"Ккал: {meal_data['calories']}\n"
-            f"Белка: {meal_data['protein']} г\n\n"
+    text = (f"🧾Вы съели на *{meal_name}*\n\n"
+            f"*Ккал:* {meal_data['calories']}\n"
+            f"*Белка:* {meal_data['protein']} г\n\n"
             f"📍Ранее вы добавили следующие продукты:\n\n{meals_text}")
     return text, meals_text
 
