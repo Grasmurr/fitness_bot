@@ -16,24 +16,24 @@ for_meal_from_user = {}
 
 @bot.message_handler(state=CourseInteraction.initial, func=lambda message: message.text == 'Мой дневник калорий 📆')
 def handle_update_calories(message: Message):
-    # try:
-    user_id, chat_id = get_id(message=message)
+    try:
+        user_id, chat_id = get_id(message=message)
 
-    user = PaidUser.objects.get(user=user_id)
-    current_day = int((timezone.now().date() - user.paid_day).days)
+        user = PaidUser.objects.get(user=user_id)
+        current_day = int((timezone.now().date() - user.paid_day).days)
 
-    if current_day == 0:
-        bot.send_message(user_id, 'Курс начнется со следующего дня! '
-                                  'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
+        if current_day == 0:
+            bot.send_message(user_id, 'Курс начнется со следующего дня! '
+                                      'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
 
-    elif 0 < current_day < 22:
-        text, markup = create_main_editing_menu(user, current_day)
-        bot.send_message(user_id, text, reply_markup=markup, parse_mode='Markdown')
+        elif 0 < current_day < 22:
+            text, markup = create_main_editing_menu(user, current_day)
+            bot.send_message(user_id, text, reply_markup=markup, parse_mode='Markdown')
 
-    else:
-        bot.send_message(user_id, 'Кажется, курс закончился!')
-    # except Exception as E:
-    #     bot.send_message(305378717, f"Ошибка {E}")
+        else:
+            bot.send_message(user_id, 'Кажется, курс закончился!')
+    except Exception as E:
+        bot.send_message(305378717, f"Ошибка {E}")
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial,
