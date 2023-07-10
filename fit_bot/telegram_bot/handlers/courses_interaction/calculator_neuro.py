@@ -32,10 +32,10 @@ def add_new_product(call: CallbackQuery):
            "- Введите текстом название продукта/блюда"
     markup = create_keyboard_markup('Отмена!')
     bot.set_state(user_id, CourseInteraction.enter_new_product, chat_id)
-    bot.send_photo(photo='AgACAgIAAxkBAAIlvGSZZSve3u6eHwdvffFT25_CmUgxAALfyzEbqbHRSCITmUvvInNJAQADAgADeQADLwQ',
-                   caption=text, chat_id=chat_id, reply_markup=markup)
-    # bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
+    # bot.send_photo(photo='AgACAgIAAxkBAAIlvGSZZSve3u6eHwdvffFT25_CmUgxAALfyzEbqbHRSCITmUvvInNJAQADAgADeQADLwQ',
     #                caption=text, chat_id=chat_id, reply_markup=markup)
+    bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
+                   caption=text, chat_id=chat_id, reply_markup=markup)
 
 
 @bot.message_handler(state=CourseInteraction.enter_new_product, content_types=['text'])
