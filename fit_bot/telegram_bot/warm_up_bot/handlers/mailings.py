@@ -18,27 +18,24 @@ def get_cursor():
 
 @bot.callback_query_handler(func=lambda call: call.data == 'continueafteremiind')
 def test_state(call: CallbackQuery):
-    try:
-        user_id = call.from_user.id
-        chat_id = call.message.chat.id
-        conn, cursor = get_cursor()
-        cursor.execute("SELECT last_bot_message_id, last_bot_message_type FROM Users WHERE user_id = ?", [user_id])
-        result = cursor.fetchone()
-        mess_id = result[0]
-        message_type = result[1]
+    user_id = call.from_user.id
+    chat_id = call.message.chat.id
+    conn, cursor = get_cursor()
+    cursor.execute("SELECT last_bot_message_id, last_bot_message_type FROM Users WHERE user_id = ?", [user_id])
+    result = cursor.fetchone()
+    mess_id = result[0]
+    message_type = result[1]
 
-        if mess_id:
-            if message_type == 'voice':
-                markup = InlineKeyboardMarkup()
-                button1 = InlineKeyboardButton(text='Погнали!', callback_data='Go!')
-                markup.add(button1)
-                bot.copy_message(chat_id, chat_id, mess_id, reply_markup=markup)
-            else:
-                bot.copy_message(chat_id, chat_id, mess_id)
+    if mess_id:
+        if message_type == 'voice':
+            markup = InlineKeyboardMarkup()
+            button1 = InlineKeyboardButton(text='Погнали!', callback_data='Go!')
+            markup.add(button1)
+            bot.copy_message(chat_id, chat_id, mess_id, reply_markup=markup)
         else:
-            bot.send_message(chat_id, f"Нет последнего сообщения")
-    except Exception as E:
-        bot.send_message(305378717, f'Ошибка: {E}')
+            bot.copy_message(chat_id, chat_id, mess_id)
+    else:
+        bot.send_message(chat_id, f"Нет последнего сообщения")
 
 
 def check_unfinished_users():
@@ -55,17 +52,16 @@ def check_unfinished_users():
                     button1 = InlineKeyboardButton(text='Продолжить!', callback_data='continueafteremiind')
                     markup.add(button1)
                     if now - last_interaction_time > timedelta(minutes=3) and notified == 0:
-                        official_photo0 = 'AgACAgIAAxkBAAICV2SIgoutZLFnVveTMW74rf1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ'
                         bot.send_photo(chat_id=user_id,
-                                       photo=official_photo0,
+                                       photo='AgACAgIAAxkBAAICV2SIgoutZLFnVveTMW74rf'
+                                             '1Cq1RwAAIUxzEbHdtBSMUWHDZ--IkjAQADAgADeQADLwQ',
                                        caption="*Упс, кажется вы отвлеклись...*\n\n"
                                                "Чтобы продолжить, нажмите на кнопку снизу👇",
                                        reply_markup=markup, parse_mode='Markdown')
                     elif now - last_interaction_time > timedelta(minutes=15) and notified == 1:
-                        official_photo = 'AgACAgIAAxkBAAICb2SIjMrh9wd3YwSuMvcBI0_bfW-MAAJwxzEbHdtBSAPISViAFsjUAQADAgADeQADLwQ'
-
                         bot.send_photo(chat_id=user_id,
-                                       photo=official_photo,
+                                       photo='AgACAgIAAxkBAAICb2SIjMrh9wd3YwSuMvcBI0_bfW-MAA'
+                                             'JwxzEbHdtBSAPISViAFsjUAQADAgADeQADLwQ',
                                        caption="📞 *Вы здесь?* Не стала вас отвлекать, подумала что вы заняты...\n\n"
                                                "Вы не заполнили форму до конца, а заявки Ибрат получит "
                                                "*после прохождения всех этапов.*\n\nЧтобы заполнить форму до конца, "
