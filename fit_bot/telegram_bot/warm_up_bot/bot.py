@@ -5,8 +5,14 @@ from .handlers.models import create_table
 
 
 def start_warmup_bot():
-    create_table()
-    bot.infinity_polling()
+    try:
+        create_table()
+        bot.send_message(305378717, f'Бот запущен! Можете нажать /start')
+        bot.infinity_polling()
+        # bot.infinity_polling(restart_on_change=True)
+        bot.send_message(305378717, f'Бот Выключен!')
+    except Exception as E:
+        bot.send_message(305378717, f'Ошибка! {E}')
 
 
 
