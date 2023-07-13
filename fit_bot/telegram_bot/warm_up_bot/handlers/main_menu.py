@@ -53,7 +53,7 @@ def start_message(message: Message):
         test_photo = 'AgACAgIAAxkBAAIGR2Sv1Uk93knxY0H7wKfepuWuqQYHAAIcyjEbIj6ASRetg2wa3ugqAQADAgADeQADLwQ'
 
         sent_message = bot.send_photo(user_id,
-                                      photo=test_photo,
+                                      photo=official_photo,
                                       caption=f'👋 Привет, меня зовут Лиза\n\n'
                                               f'Я - виртуальный ассистент Ибрата, '
                                               f'готова принять вашу заявку на личную диагностику!\n\n'
@@ -88,7 +88,7 @@ def get_name(message: Message):
         test_photo = 'AgACAgIAAxkBAAIGVWSv1cFu58hHJdZl8cjMjH9da9SDAAIeyjEbIj6ASVLJQRLgg1q5AQADAgADeQADLwQ'
 
         sent_message = bot.send_photo(user_id,
-                                      photo=test_photo,
+                                      photo=official_photo,
                                       caption=text,
                                       reply_markup=markup, parse_mode='Markdown')
         cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
@@ -125,7 +125,7 @@ def get_age(message: Message):
             test_voice = 'AwACAgIAAxkBAAIGX2Sv1v9RRi84ysKVeLX4MZ5GvvngAAJDLAAC3ckAAUg2ON27vliZXC8E'
 
             sent_message = bot.send_voice(chat_id,
-                                          voice=test_voice,
+                                          voice=official_voice,
                                           reply_markup=markup)
             cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
                            [sent_message.message_id, 'voice', user_id])
@@ -341,7 +341,7 @@ def describe_problem(message: Message):
         test_photo = 'AgACAgIAAxkBAAIGW2Sv1qiouuWd327DKFUt9NLwHp0RAAIlyjEbIj6ASWDi6EmRg_ZgAQADAgADeQADLwQ'
 
         bot.send_photo(user_id,
-                       photo=test_photo,
+                       photo=official_photo,
                        caption='Спасибо за предоставленную информацию!\n\n'
                                '*Ибрат свяжется с вами в течение 24 часов.*\n\n'
                                'Добро пожаловать в 21FIT! ❣️\nЕще увидимся!', parse_mode='Markdown')
