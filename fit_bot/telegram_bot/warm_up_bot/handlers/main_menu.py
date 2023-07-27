@@ -207,7 +207,8 @@ def get_gender(message: Message):
 
             bot.set_state(user_id, States.enter_weight, chat_id)
         else:
-            sent_message = bot.send_message(user_id, 'Пожалуйста, введите корректный возраст (только цифру от 14 до 70).')
+            sent_message = bot.send_message(user_id, 'Пожалуйста, введите корректный возраст '
+                                                     '(только цифру от 14 до 70).')
             cursor.execute('UPDATE Users SET last_bot_message_id = ?, last_bot_message_type = ? WHERE user_id = ?',
                            [sent_message.message_id, 'text', user_id])
             conn.commit()

@@ -131,7 +131,7 @@ def handle_meal_calories(message: Message):
 def handle_meal_calories(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
-    if answer.isdigit() and 0 < int(answer) < 5000:
+    if answer.isdigit() and -1 < int(answer) < 5000:
         for_meal_from_user[user_id]['proteins'] = answer
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days

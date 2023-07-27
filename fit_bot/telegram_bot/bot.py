@@ -19,7 +19,13 @@ bot.add_custom_filter(IsAdminFilter(bot))
 
 def start_bot():
     bot.send_message(305378717, f'Бот запущен! Можете нажать /start')
-    bot.infinity_polling()
+    while True:
+        try:
+            bot.infinity_polling()
+        except Exception as E:
+            bot.send_message(305378717, f'Ошибка: {E}')
+            time.sleep(5)
+            continue
     # bot.infinity_polling(restart_on_change=True)
     bot.send_message(305378717, f'Бот Выключен!')
 

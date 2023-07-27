@@ -1,6 +1,6 @@
 from .loader import bot
 from telebot.types import Message
-from .handlers import main_menu, send_mails, mailings
+from .handlers import main_menu, send_mails, mailings, export_db
 from .handlers.models import create_table
 
 
