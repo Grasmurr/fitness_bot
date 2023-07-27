@@ -73,6 +73,7 @@ class Content(models.Model):
 
 class DailyContent(Content):
     category = models.ForeignKey(Категории, on_delete=models.CASCADE, related_name='daily_contents')
+    video = models.ForeignKey(Video, on_delete=models.CASCADE, blank=True, null=True, related_name='-')
 
 
 class Mailing(Content):
