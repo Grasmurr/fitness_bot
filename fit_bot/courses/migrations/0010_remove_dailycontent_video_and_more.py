@@ -12,14 +12,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='dailycontent',
-            name='video',
-        ),
-        migrations.RemoveField(
-            model_name='unpaidusercontent',
-            name='video',
-        ),
+
         migrations.CreateModel(
             name='Training',
             fields=[
