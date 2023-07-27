@@ -6,7 +6,7 @@ from django.dispatch import receiver
 
 
 class UnpaidUser(models.Model):
-    user_id = models.IntegerField(primary_key=True)
+    user_id = models.BigIntegerField(primary_key=True)
     has_paid = models.BooleanField(default=False)
 
     def __str__(self):
