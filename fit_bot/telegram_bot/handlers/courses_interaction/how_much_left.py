@@ -22,7 +22,7 @@ def calories_info(message: Message):
         user_calories, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins = \
             return_calories_and_norm(user_model, current_day)
 
-        if daily_norm > remaining_calories:
+        if remaining_calories < 0:
             text = "❗️Вы переели свою норму ккал, ваш результат на 70% зависит от вашего питания, " \
                    "поэтому желательно больше ничего не есть за сегодня…\n\n" \
                    "Если крайне тяжело, то лучше отдать предпочтение овощам (огурцы, капуста, броколли, помидоры…)"
