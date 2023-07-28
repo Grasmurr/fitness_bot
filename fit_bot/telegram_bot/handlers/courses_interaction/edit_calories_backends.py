@@ -104,7 +104,7 @@ def create_main_editing_menu(user, current_day):
         f"*🍏 Перекусы:*\n"
         f"{user_calories['snack']['calories']} ккал / {user_calories['snack']['protein']} г белка\n\n"
         f"*🧾 Итого за день:*\n"
-        f"Ккал: {int(daily_norm) - int(remaining_calories)} ккал\n"
+        f"Ккал: {user_calories['breakfast']['calories'] + user_calories['lunch']['calories'] + user_calories['dinner']['calories'] + user_calories['snack']['calories']} ккал\n"
         f"Белка: {user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein']} г белка\n\n"
         f"*Вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
     )
