@@ -36,7 +36,7 @@ class PaidUser(models.Model):
         ('N', 'Новичок'),
     ]
 
-    user = models.IntegerField(primary_key=True)
+    user = models.BigIntegerField(primary_key=True)
     username = models.CharField(max_length=100, blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)
     paid_day = models.DateField(blank=True, null=True)
