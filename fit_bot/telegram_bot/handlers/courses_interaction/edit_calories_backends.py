@@ -96,17 +96,17 @@ def create_main_editing_menu(user, current_day):
     text = (
         f"*Текущая норма: {daily_norm} ккал / {daily_proteins_norm} г белка*\n\n"
         f"*🍳 Завтрак:*\n"
-        f"{user_calories['breakfast']['calories']} ккал / {user_calories['breakfast']['protein']} г белка\n\n"
+        f"{round(user_calories['breakfast']['calories'], 1)} ккал / {round(user_calories['breakfast']['protein'], 1)} г белка\n\n"
         f"*🥗 Обед:*\n"
-        f"{user_calories['lunch']['calories']} ккал / {user_calories['lunch']['protein']} г белка\n\n"
+        f"{round(user_calories['lunch']['calories'], 1)} ккал / {round(user_calories['lunch']['protein'], 1)} г белка\n\n"
         f"*🍲 Ужин:*\n"
-        f"{user_calories['dinner']['calories']} ккал / {user_calories['dinner']['protein']} г белка\n\n"
+        f"{round(user_calories['dinner']['calories'], 1)} ккал / {round(user_calories['dinner']['protein'], 1)} г белка\n\n"
         f"*🍏 Перекусы:*\n"
-        f"{user_calories['snack']['calories']} ккал / {user_calories['snack']['protein']} г белка\n\n"
+        f"{round(user_calories['snack']['calories'], 1)} ккал / {round(user_calories['snack']['protein'], 1)} г белка\n\n"
         f"*🧾 Итого за день:*\n"
-        f"Ккал: {user_calories['breakfast']['calories'] + user_calories['lunch']['calories'] + user_calories['dinner']['calories'] + user_calories['snack']['calories']} ккал\n"
-        f"Белка: {user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein']} г белка\n\n"
-        f"*Вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
+        f"Ккал: {round(user_calories['breakfast']['calories'] + user_calories['lunch']['calories'] + user_calories['dinner']['calories'] + user_calories['snack']['calories'], 1)} ккал\n"
+        f"Белка: {round(user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein'], 1)} г белка\n\n"
+        f"*Вам еще нужно съесть:* \n{round(remaining_calories, 1)} ккал / {round(remaining_proteins, 1)}г белка"
     )
 
     markup = create_calories_menu()
@@ -122,8 +122,8 @@ def get_meal_info_text(meal_name, meal_data, user_meals):
     else:
         meals_text = 'Кажется, вы еще ничего не добавили!'
     text = (f"🧾Вы съели на *{meal_name}*\n\n"
-            f"*Ккал:* {meal_data['calories']}\n"
-            f"*Белка:* {meal_data['protein']} г\n\n"
+            f"*Ккал:* {round(meal_data['calories'], 1)}\n"
+            f"*Белка:* {round(meal_data['protein'], 1)} г\n\n"
             f"📍Ранее вы добавили следующие продукты:\n\n{meals_text}")
     return text, meals_text
 

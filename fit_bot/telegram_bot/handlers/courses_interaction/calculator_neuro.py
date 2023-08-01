@@ -135,7 +135,7 @@ def handle_choosen_product(call: CallbackQuery):
                 nutrient_name = nutrient_dict.get(str(nutrient), nutrient)
                 value = value if value is not None else 0
                 answer_text += f"{nutrient_name}: {value}\n"
-                calories_data[user_id]['KBJU_data'].append(int(value))
+                calories_data[user_id]['KBJU_data'].append(round(float(value), 1))
 
         calories_data[user_id]['chosen_dish'] = \
             [calories_data[user_id]["needed_data"][1][calories_data[user_id]["chosen_number"]],
@@ -186,15 +186,15 @@ def handle_grams_count(message: Message):
         current_day = (timezone.now().date() - user.paid_day).days
         user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
             f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] = \
-            f"{int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100)} ккал " \
-            f"{int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100)}г белков"
+            f"{round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
+            f"{round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
 
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,
                                              meal_type=user_data[user_id][current_day]['selected_meal'])
         update_meal(meal,
-                    int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100),  # калории
-                    int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100))
+                    round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1),  # калории
+                    round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1))
 
         update_courseday_calories(course_day)
 
@@ -220,16 +220,16 @@ def handle_amount(call: CallbackQuery):
         current_day = (timezone.now().date() - user.paid_day).days
         user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
             f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] \
-            = f"{int(calories_data[user_id]['KBJU_data'][0]) * amount} ккал " \
-              f"{int(calories_data[user_id]['KBJU_data'][1]) * amount}г белков"
+            = f"{round(float(calories_data[user_id]['KBJU_data'][0]) * amount, 1)} ккал " \
+              f"{round(float(calories_data[user_id]['KBJU_data'][1]) * amount, 1)}г белков"
         # bot.send_message(user_id, text=f"{user_data[user_id][current_day][user_data[user_id]
         # [current_day]['selected_meal']]}")
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,
                                              meal_type=user_data[user_id][current_day]['selected_meal'])
         update_meal(meal,
-                    int(calories_data[user_id]['KBJU_data'][0]) * amount,  # калории
-                    int(calories_data[user_id]['KBJU_data'][1]) * amount)
+                    round(float(calories_data[user_id]['KBJU_data'][0]) * amount, 1),  # калории
+                    round(float(calories_data[user_id]['KBJU_data'][1]) * amount, 1))
 
         update_courseday_calories(course_day)
 

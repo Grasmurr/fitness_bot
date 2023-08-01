@@ -122,6 +122,7 @@ def handle_meal_calories(message: Message):
     try:
         answer = float(answer)
         if -1 < int(answer) < 5001:
+
             for_meal_from_user[user_id]['calories'] = answer
             bot.send_message(user_id, 'Введите количество *белка* для данного продукта:', parse_mode='Markdown')
             bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
@@ -152,8 +153,8 @@ def handle_meal_calories(message: Message):
             meal, _ = Meal.objects.get_or_create(course_day=course_day,
                                                  meal_type=user_data[user_id][current_day]['selected_meal'])
             update_meal(meal,
-                        int(for_meal_from_user[user_id]['calories']),  # калории
-                        int(for_meal_from_user[user_id]['proteins']))
+                        round(float(for_meal_from_user[user_id]['calories']), 1),  # калории
+                        round(float(for_meal_from_user[user_id]['proteins']), 1))
 
             update_courseday_calories(course_day)
 
@@ -256,15 +257,13 @@ def delete_or_not_product(call: CallbackQuery):
             user_data[user_id][current_day]['selected_meal_to_delete']].split("-")[-1].strip()
 
         calories, _, protein, _ = selected_to_delete.split()
-
-        calories = int(calories)
-        protein = int(protein[:-1])
+        calories = float(calories)
+        protein = float(protein[:-1])
 
         meal.calories -= calories
         meal.protein -= protein
 
         meal.save()
-
         for product, value in list(
                 user_data[user_id][current_day][user_data[user_id][current_day]["selected_meal"]].items()):
             if value == selected_to_delete:
