@@ -119,11 +119,15 @@ def handle_meal_name(message: Message):
 def handle_meal_calories(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
-    if answer.isdigit() and 0 < int(answer) < 5000:
-        for_meal_from_user[user_id]['calories'] = answer
-        bot.send_message(user_id, 'Введите количество *белка* для данного продукта:', parse_mode='Markdown')
-        bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
-    else:
+    try:
+        answer = float(answer)
+        if -1 < int(answer) < 5001:
+            for_meal_from_user[user_id]['calories'] = answer
+            bot.send_message(user_id, 'Введите количество *белка* для данного продукта:', parse_mode='Markdown')
+            bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
+        else:
+            bot.send_message(user_id, 'Можно ввести только от 1 до 5000.')
+    except ValueError:
         bot.send_message(user_id, 'Кажется, вы ввели что-то неправильно. Попробуйте снова.')
 
 
@@ -131,32 +135,36 @@ def handle_meal_calories(message: Message):
 def handle_meal_calories(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
-    if answer.isdigit() and -1 < int(answer) < 5000:
-        for_meal_from_user[user_id]['proteins'] = answer
-        user = PaidUser.objects.get(user=user_id)
-        current_day = (timezone.now().date() - user.paid_day).days
+    try:
+        answer = float(answer)
+        if -1 < int(answer) < 5001:
+            for_meal_from_user[user_id]['proteins'] = answer
+            user = PaidUser.objects.get(user=user_id)
+            current_day = (timezone.now().date() - user.paid_day).days
 
-        paid_user_main_menu(message)
+            paid_user_main_menu(message)
 
-        user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
-            f"{for_meal_from_user[user_id]['name']}"] = f"{for_meal_from_user[user_id]['calories']} " \
-                                                        f"ккал {for_meal_from_user[user_id]['proteins']}г белков"
+            user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
+                f"{for_meal_from_user[user_id]['name']}"] = f"{for_meal_from_user[user_id]['calories']} " \
+                                                            f"ккал {for_meal_from_user[user_id]['proteins']}г белков"
 
-        course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
-        meal, _ = Meal.objects.get_or_create(course_day=course_day,
-                                             meal_type=user_data[user_id][current_day]['selected_meal'])
-        update_meal(meal,
-                    int(for_meal_from_user[user_id]['calories']),  # калории
-                    int(for_meal_from_user[user_id]['proteins']))
+            course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
+            meal, _ = Meal.objects.get_or_create(course_day=course_day,
+                                                 meal_type=user_data[user_id][current_day]['selected_meal'])
+            update_meal(meal,
+                        int(for_meal_from_user[user_id]['calories']),  # калории
+                        int(for_meal_from_user[user_id]['proteins']))
 
-        update_courseday_calories(course_day)
+            update_courseday_calories(course_day)
 
-        text, markup = meal_info(user, current_day, user_data, user_id,
-                                 user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
-        bot.set_state(user_id, CourseInteraction.initial, chat_id)
+            text, markup = meal_info(user, current_day, user_data, user_id,
+                                     user_data[user_id][current_day]['selected_meal'])
+            bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+            bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
-    else:
+        else:
+            bot.send_message(user_id, 'Можно ввести только от 1 до 5000.')
+    except ValueError:
         bot.send_message(user_id, 'Кажется, вы ввели что-то неправильно. Попробуйте снова.')
 
 
