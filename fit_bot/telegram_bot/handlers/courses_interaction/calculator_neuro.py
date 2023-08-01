@@ -184,10 +184,22 @@ def handle_grams_count(message: Message):
         bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
-        user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
-            f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"] = \
-            f"{round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
-            f"{round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
+        selected_meal = user_data[user_id][current_day]['selected_meal']
+        product = f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"
+
+        if product in user_data[user_id][current_day][selected_meal]:
+            old_calories, _, old_proteins, _ = user_data[user_id][current_day][selected_meal][product].split()
+            old_calories = float(old_calories)
+            old_proteins = float(old_proteins.rstrip('г'))
+
+            new_calories = round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1) + old_calories
+            new_proteins = round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1) + old_proteins
+
+            user_data[user_id][current_day][selected_meal][product] = f"{new_calories} ккал {new_proteins}г белков"
+        else:
+            user_data[user_id][current_day][selected_meal][product] = \
+                f"{round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
+                f"{round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
 
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,

@@ -128,7 +128,7 @@ def handle_meal_calories(message: Message):
             bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
         else:
             bot.send_message(user_id, 'Можно ввести только от 1 до 5000.')
-    except ValueError:
+    except Exception:
         bot.send_message(user_id, 'Кажется, вы ввели что-то неправильно. Попробуйте снова.')
 
 
@@ -145,9 +145,21 @@ def handle_meal_calories(message: Message):
 
             paid_user_main_menu(message)
 
-            user_data[user_id][current_day][user_data[user_id][current_day]['selected_meal']][
-                f"{for_meal_from_user[user_id]['name']}"] = f"{for_meal_from_user[user_id]['calories']} " \
-                                                            f"ккал {for_meal_from_user[user_id]['proteins']}г белков"
+            selected_meal = user_data[user_id][current_day]['selected_meal']
+            product = f"{for_meal_from_user[user_id]['name']}"
+
+            if product in user_data[user_id][current_day][selected_meal]:
+                old_calories, _, old_proteins, _ = user_data[user_id][current_day][selected_meal][product].split()
+                old_calories = float(old_calories)
+                old_proteins = float(old_proteins.rstrip('г'))
+
+                new_calories = float(for_meal_from_user[user_id]['calories']) + old_calories
+                new_proteins = float(for_meal_from_user[user_id]['proteins']) + old_proteins
+
+                user_data[user_id][current_day][selected_meal][product] = f"{new_calories} ккал {new_proteins}г белков"
+            else:
+                user_data[user_id][current_day][selected_meal][product] = \
+                    f"{for_meal_from_user[user_id]['calories']} ккал {for_meal_from_user[user_id]['proteins']}г белков"
 
             course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
             meal, _ = Meal.objects.get_or_create(course_day=course_day,
@@ -165,7 +177,7 @@ def handle_meal_calories(message: Message):
 
         else:
             bot.send_message(user_id, 'Можно ввести только от 1 до 5000.')
-    except ValueError:
+    except Exception:
         bot.send_message(user_id, 'Кажется, вы ввели что-то неправильно. Попробуйте снова.')
 
 
