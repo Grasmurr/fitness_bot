@@ -27,6 +27,37 @@ def create_categories_keyboard(for_unpaid=False):
     return markup
 
 
+def get_users_by_category_name(model_class, category_name=False):
+    if category_name:
+        category = Категории.objects.get(название=category_name)
+        users = model_class.objects.filter(
+            пол=category.пол,
+            цель=category.цель,
+            место=category.место,
+            уровень=category.уровень
+        )
+    else:
+        if not model_class == UnpaidUser:
+            users = model_class.objects.all()
+        else:
+            users = model_class.objects.filter(
+                has_paid=False
+            )
+    return users
+
+
+def send_message_to_users(users, message_text=None, photo_file_id=None, caption=None):
+    for user in users:
+        try:
+            chat_id = user.user
+        except AttributeError:
+            chat_id = user.user_id
+        if photo_file_id:
+            bot.send_photo(chat_id, photo_file_id, caption=caption)
+        elif message_text:
+            bot.send_message(chat_id, message_text)
+
+
 @bot.message_handler(commands=['admin'], is_admin=True)
 def what(message: Message):
     user_id, chat_id = get_id(message=message)
@@ -98,7 +129,7 @@ def handle_mailing(message: Message):
         what(message)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('category_'))
+@bot.callback_query_handler(state=AdminStates.choosing_mailing_category, func=lambda call: call.data.startswith('category_'))
 def category_callback(call: CallbackQuery):
     if not call.data.split('_')[1] == 'all':
         category_index = int(call.data.split('_')[1])
@@ -123,17 +154,16 @@ def category_callback(call: CallbackQuery):
     bot.answer_callback_query(call.id)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'message_type_text')
+@bot.callback_query_handler(state=AdminStates.choosing_mailing_category, func=lambda call: call.data == 'message_type_text')
 def message_type_text_callback(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
     admin_data[call.from_user.id]['message_type'] = 'text'
-
-    admin_data[call.from_user.id]['state'] = States.ENTER_TEXT_FOR_MAILING
     bot.edit_message_text(chat_id=call.message.chat.id,
                           message_id=call.message.message_id, text='Пожалуйста, отправьте текст сообщения для рассылки.')
-    bot.answer_callback_query(call.id)
+    bot.set_state(user_id, AdminStates.enter_mailing_text, chat_id)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'message_type_photo')
+@bot.callback_query_handler(state=AdminStates.choosing_mailing_category, func=lambda call: call.data == 'message_type_photo')
 def message_type_photo_callback(call: CallbackQuery):
     admin_data[call.from_user.id]['message_type'] = 'photo'
 
@@ -148,8 +178,9 @@ def message_type_photo_callback(call: CallbackQuery):
     bot.answer_callback_query(call.id)
 
 
-@bot.callback_query_handler(func=lambda call: call.data in ('add_caption_yes', 'add_caption_no'))
+@bot.callback_query_handler(state=AdminStates.choosing_mailing_category, func=lambda call: call.data in ('add_caption_yes', 'add_caption_no'))
 def add_caption_callback(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
     if call.data == 'add_caption_yes':
         admin_data[call.from_user.id]['add_caption'] = True
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -160,83 +191,49 @@ def add_caption_callback(call: CallbackQuery):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Пожалуйста, отправьте фотографию без заголовка, '
                               'которую вы хотите разослать (бот получит file_id фотографии).')
+    bot.set_state(user_id, AdminStates.upload_photo, chat_id)
 
     bot.answer_callback_query(call.id)
 
 
-@bot.message_handler(func=lambda message: message.from_user.id in admin_data and 'message_type' in admin_data[message.from_user.id] and admin_data[message.from_user.id]['state'] == States.ENTER_TEXT_FOR_MAILING, content_types=['text'], is_admin=True)
+@bot.message_handler(state=AdminStates.enter_mailing_text, content_types=['text'], is_admin=True)
 def text_handler(message: Message):
-    if message.from_user.id in admin_data and admin_data[message.from_user.id]['message_type'] == 'text':
-        text = message.text
-
-        markup = InlineKeyboardMarkup()
-        button_yes = InlineKeyboardButton('Да', callback_data='send_text_yes')
-        button_no = InlineKeyboardButton('Нет', callback_data='send_text_no')
-        markup.add(button_yes, button_no)
-
-        bot.send_message(chat_id=message.chat.id,
-                         text=f'Вы уверены, что хотите отправить данное текстовое сообщение?\n\n{text}',
-                         reply_markup=markup)
-        admin_data[message.from_user.id]['state'] = States.CHOOSING_MAILING_CATEGORY
+    text = message.text
+    markup = InlineKeyboardMarkup()
+    button_yes = InlineKeyboardButton('Да', callback_data='send_text_yes')
+    button_no = InlineKeyboardButton('Нет', callback_data='send_text_no')
+    markup.add(button_yes, button_no)
+    bot.send_message(chat_id=message.chat.id,
+                     text=f'Вы уверены, что хотите отправить данное текстовое сообщение?\n\n{text}',
+                     reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: 'message_type' in admin_data[message.from_user.id], content_types=['photo'], is_admin=True)
+@bot.message_handler(state=AdminStates.upload_photo, content_types=['photo'], is_admin=True)
 def photo_handler(message: Message):
-    if message.from_user.id in admin_data and admin_data[message.from_user.id]['message_type'] == 'photo':
-        photo = message.photo[-1]  # Получение самой большой версии фотографии
-        file_id = photo.file_id
+    photo = message.photo[-1]  # Получение самой большой версии фотографии
+    file_id = photo.file_id
 
-        caption = message.caption if admin_data[message.from_user.id]['add_caption'] else None
+    caption = message.caption if admin_data[message.from_user.id]['add_caption'] else None
 
-        # Спрашиваем у пользователя, отправлять или нет
-        markup = InlineKeyboardMarkup()
-        button_yes = InlineKeyboardButton('Да', callback_data='send_photo_yes')
-        button_no = InlineKeyboardButton('Нет', callback_data='send_photo_no')
-        markup.add(button_yes, button_no)
+    # Спрашиваем у пользователя, отправлять или нет
+    markup = InlineKeyboardMarkup()
+    button_yes = InlineKeyboardButton('Да', callback_data='send_photo_yes')
+    button_no = InlineKeyboardButton('Нет', callback_data='send_photo_no')
+    markup.add(button_yes, button_no)
 
-        if caption:
-            bot.send_photo(chat_id=message.chat.id, photo=file_id,
-                           caption=f'Вы уверены, что хотите отправить данную фотографию с заголовком: "{caption}"?',
-                           reply_markup=markup)
-        else:
-            bot.send_photo(chat_id=message.chat.id, photo=file_id,
-                           caption='Вы уверены, что хотите отправить данную фотографию без заголовка?',
-                           reply_markup=markup)
-
-
-def get_users_by_category_name(model_class, category_name=False):
-    if category_name:
-        category = Категории.objects.get(название=category_name)
-        users = model_class.objects.filter(
-            пол=category.пол,
-            цель=category.цель,
-            место=category.место,
-            уровень=category.уровень
-        )
+    if caption:
+        bot.send_photo(chat_id=message.chat.id, photo=file_id,
+                       caption=f'Вы уверены, что хотите отправить данную фотографию с заголовком: "{caption}"?',
+                       reply_markup=markup)
     else:
-        if not model_class == UnpaidUser:
-            users = model_class.objects.all()
-        else:
-            users = model_class.objects.filter(
-                has_paid=False
-            )
-    return users
+        bot.send_photo(chat_id=message.chat.id, photo=file_id,
+                       caption='Вы уверены, что хотите отправить данную фотографию без заголовка?',
+                       reply_markup=markup)
 
 
-def send_message_to_users(users, message_text=None, photo_file_id=None, caption=None):
-    for user in users:
-        try:
-            chat_id = user.user
-        except AttributeError:
-            chat_id = user.user_id
-        if photo_file_id:
-            bot.send_photo(chat_id, photo_file_id, caption=caption)
-        elif message_text:
-            bot.send_message(chat_id, message_text)
-
-
-@bot.callback_query_handler(func=lambda call: call.data in ('send_text_yes', 'send_text_no'))
+@bot.callback_query_handler(state=AdminStates.enter_mailing_text, func=lambda call: call.data in ('send_text_yes', 'send_text_no'))
 def send_text_callback(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
     if call.data == 'send_text_yes':
         text = call.message.text
         model_class = PaidUser if admin_data[call.from_user.id]['category_of_mailing'] == 'PaidUser' \
@@ -255,12 +252,13 @@ def send_text_callback(call: CallbackQuery):
     else:
         bot.edit_message_text(chat_id=call.message.chat.id,
                               message_id=call.message.message_id, text='Отправка текстового сообщения отменена.')
-
+    bot.set_state(user_id, AdminStates.choosing_mailing_category, chat_id)
     bot.answer_callback_query(call.id)
 
 
-@bot.callback_query_handler(func=lambda call: call.data in ('send_photo_yes', 'send_photo_no'))
+@bot.callback_query_handler(state=AdminStates.upload_photo, func=lambda call: call.data in ('send_photo_yes', 'send_photo_no'))
 def send_photo_callback(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
     if call.data == 'send_photo_yes':
         photo = call.message.photo[-1]  # Получение самой большой версии фотографии
         file_id = photo.file_id
@@ -286,7 +284,7 @@ def send_photo_callback(call: CallbackQuery):
     else:
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Отправка фотографии отменена.')
-
+    bot.set_state(user_id, AdminStates.choosing_mailing_category, chat_id)
     bot.answer_callback_query(call.id)
 
 

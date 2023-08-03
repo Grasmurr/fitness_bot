@@ -70,4 +70,6 @@ class AdminStates(StatesGroup):
     mailing = State()
     choosing_mailing_category = State()
     upload_video = State()
+    enter_mailing_text = State()
+    upload_photo = State()
 

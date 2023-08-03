@@ -13,12 +13,12 @@ from .edit_calories import user_data
 calories_data = {}
 
 
-@bot.message_handler(content_types=['photo'])
-def return_photo_id(message: Message):
-    file_id = message.photo[-1].file_id
-    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-    print(f"Received photo with id: {file_id}")
-    bot.send_photo(message.chat.id, file_id)
+# @bot.message_handler(content_types=['photo'])
+# def return_photo_id(message: Message):
+#     file_id = message.photo[-1].file_id
+#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+#     print(f"Received photo with id: {file_id}")
+#     bot.send_photo(message.chat.id, file_id)
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'add_product')
@@ -192,14 +192,14 @@ def handle_grams_count(message: Message):
             old_calories = float(old_calories)
             old_proteins = float(old_proteins.rstrip('г'))
 
-            new_calories = round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1) + old_calories
-            new_proteins = round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1) + old_proteins
+            new_calories = round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1) + old_calories
+            new_proteins = round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1) + old_proteins
 
             user_data[user_id][current_day][selected_meal][product] = f"{new_calories} ккал {new_proteins}г белков"
         else:
             user_data[user_id][current_day][selected_meal][product] = \
-                f"{round(int(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
-                f"{round(int(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
+                f"{round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
+                f"{round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
 
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,
@@ -207,7 +207,6 @@ def handle_grams_count(message: Message):
         update_meal(meal,
                     round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1),  # калории
                     round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1))
-
         update_courseday_calories(course_day)
 
         text, markup = meal_info(user, current_day, user_data, user_id,
