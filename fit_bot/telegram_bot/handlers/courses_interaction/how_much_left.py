@@ -27,6 +27,12 @@ def calories_info(message: Message):
                    "поэтому желательно больше ничего не есть за сегодня…\n\n" \
                    "Если крайне тяжело, то лучше отдать предпочтение овощам (огурцы, капуста, броколли, помидоры…)"
         else:
+
+            if remaining_calories < 0:
+                remaining_calories = '0'
+            if remaining_proteins < 0:
+                remaining_proteins = '0'
+
             text = f"🔥Вам можно съесть еще: {remaining_calories} ккал / {remaining_proteins}г белка"
         bot.send_message(user_id, text)
 
