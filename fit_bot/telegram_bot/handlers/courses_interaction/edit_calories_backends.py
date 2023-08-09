@@ -2,6 +2,7 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
 import json
+import re
 
 from ...models import CourseDay, Meal
 
@@ -205,18 +206,25 @@ def update_meal(meal, calories, protein):
     meal.save()
 
 
+def clean_query(query):
+    return re.sub(r'[^a-zA-Z0-9\sа-яА-Я]', '', query)
+
+
 def search_food(query):
     url = "https://fs2.tvoydnevnik.com/api2/food_search/search"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
     }
+
+    cleaned_query = clean_query(query)
+
     data = {
         "jwt": "false",
         "DeviceSize": "XSmall",
         "DeviceSizeDiary": "XSmall",
         "query[count_on_page]": 5,
         "query[page]": 1,
-        "query[name]": query,
+        "query[name]": cleaned_query,
         "platformId": 101,
     }
 
@@ -271,9 +279,15 @@ def food_choosing_menu(answer, user_id):
     button3 = InlineKeyboardButton(text='3', callback_data='3')
     button4 = InlineKeyboardButton(text='4', callback_data='4')
     button5 = InlineKeyboardButton(text='5', callback_data='5')
-    button6 = InlineKeyboardButton(text='Отмена', callback_data='cancel_product')
+
+    button6 = InlineKeyboardButton(text='Повторить ввод', callback_data='try_again')
+    button7 = InlineKeyboardButton(text='Ввести вручную', callback_data='enter_manually')
+
+    button8 = InlineKeyboardButton(text='Отмена', callback_data='cancel_product')
     one_five.row(button1, button2, button3, button4, button5)
     one_five.add(button6)
+    one_five.add(button7)
+    one_five.add(button8)
     return text_answer, data, list_for_me, one_five
 
 

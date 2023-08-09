@@ -60,7 +60,9 @@ def handle_new_product(message: Message):
             calories_data[user_id]['needed_data'] = [data, list_for_me]
             calories_data[user_id]['variants'] = text_answer
             calories_data[user_id]['needed_data_keyboard'] = one_five
+
             bot.send_message(user_id, text=f'{text_answer}', reply_markup=one_five)
+
             calories_data[user_id]['needed_data'] = [data, list_for_me]
             bot.set_state(user_id, CourseInteraction.choose_product, chat_id)
         else:
@@ -112,6 +114,16 @@ def handle_choosen_product(call: CallbackQuery):
                                         'Сколько еще можно ккал?👀', 'Появились вопросики...')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
         bot.send_message(chat_id=chat_id, text='Главное меню', reply_markup=markup)
+
+    elif answer == 'try_again':
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Хорошо, введите ваш запрос еще раз:')
+        bot.set_state(user_id, CourseInteraction.enter_new_product, chat_id)
+    elif answer == 'enter_manually':
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Хорошо, в таком случае введите название продукта:')
+        bot.set_state(user_id, CourseInteraction.enter_meal_name, chat_id)
+
     else:
         nutrient_dict = {"11": "Калорий", "13": "Белков"}
         nutrients_list = calories_data[user_id]['needed_data'][0]
