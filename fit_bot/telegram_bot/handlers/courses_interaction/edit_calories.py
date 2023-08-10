@@ -102,6 +102,7 @@ def handle_meal_calories(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
     try:
+        answer = answer.replace(',', '.')
         answer = float(answer)
         if -1 < int(answer) < 5001:
             for_meal_from_user[user_id]['calories'] = answer
@@ -118,6 +119,7 @@ def handle_meal_calories(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
     try:
+        answer = answer.replace(',', '.')
         answer = float(answer)
         if -1 < int(answer) < 5001:
             for_meal_from_user[user_id]['proteins'] = answer
@@ -128,7 +130,6 @@ def handle_meal_calories(message: Message):
                                       f'Белки: *{for_meal_from_user[user_id]["proteins"]}*\n\nПродолжить, '
                                       f'изменить или отменить?', reply_markup=markup, parse_mode='Markdown')
             bot.set_state(user_id, CourseInteraction.continue_meal_name, chat_id)
-
         else:
             bot.send_message(user_id, 'Можно ввести только от 1 до 5000.')
     except Exception:
@@ -139,9 +140,9 @@ def handle_meal_calories(message: Message):
 def handle_meal_name(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
+    user = PaidUser.objects.get(user=user_id)
+    current_day = (timezone.now().date() - user.paid_day).days
     if answer == 'Продолжить':
-        user = PaidUser.objects.get(user=user_id)
-        current_day = (timezone.now().date() - user.paid_day).days
 
         paid_user_main_menu(message)
 
@@ -181,9 +182,10 @@ def handle_meal_name(message: Message):
     else:
         bot.send_message(text="Вы отменили добавление нового блюда.", chat_id=chat_id)
         paid_user_main_menu(message)
+        text, markup = meal_info(user, current_day, user_data, user_id,
+                                 user_data[user_id][current_day]['selected_meal'])
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
-
-
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'redact')
@@ -221,8 +223,7 @@ def redact_entered_meals(call: CallbackQuery):
     bot.set_state(user_id, CourseInteraction.redacting, chat_id)
 
 
-@bot.callback_query_handler(state=CourseInteraction.redacting,
-                            func=lambda call: call.data)
+@bot.callback_query_handler(state=CourseInteraction.redacting, func=lambda call: call.data)
 def handle_redacting(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
 
@@ -235,8 +236,12 @@ def handle_redacting(call: CallbackQuery):
         button1 = InlineKeyboardButton(text='Назад', callback_data='back')
         markup.add(button)
         markup.add(button1)
-        bot.edit_message_text(chat_id=chat_id, text='Хотите удалить данное блюдо?',
-                              message_id=call.message.message_id, reply_markup=markup)
+
+        selected_to_delete = user_data[user_id][current_day]['variants_to_delete'][
+            user_data[user_id][current_day]['selected_meal_to_delete']].split("-")[1].strip()
+
+        bot.edit_message_text(chat_id=chat_id, text=f'Хотите удалить данное блюдо: *{selected_to_delete}*?',
+                              message_id=call.message.message_id, reply_markup=markup, parse_mode='Markdown')
 
         bot.set_state(user_id, CourseInteraction.delete_product, chat_id)
 
@@ -286,7 +291,11 @@ def delete_or_not_product(call: CallbackQuery):
             if value == selected_to_delete:
                 del user_data[user_id][current_day][user_data[user_id][current_day]["selected_meal"]][product]
 
-        bot.edit_message_text('удалено!', chat_id, call.message.message_id, reply_markup=None)
+        selected_to_delete = user_data[user_id][current_day]['variants_to_delete'][
+            user_data[user_id][current_day]['selected_meal_to_delete']].split("-")[1].strip()
+
+        bot.edit_message_text(f'Вы удалили *{selected_to_delete}*!', chat_id, call.message.message_id,
+                              reply_markup=None, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
 

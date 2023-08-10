@@ -108,12 +108,21 @@ def handle_choosen_product(call: CallbackQuery):
 
     answer = call.data
 
+    user = PaidUser.objects.get(user=user_id)
+    current_day = (timezone.now().date() - user.paid_day).days
+
     if answer == 'cancel_product':
         bot.delete_message(chat_id, message_id=call.message.message_id)
         markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
                                         'Сколько еще можно ккал?👀', 'Появились вопросики...')
-        bot.set_state(user_id, CourseInteraction.initial, chat_id)
         bot.send_message(chat_id=chat_id, text='Главное меню', reply_markup=markup)
+
+        text, markup = meal_info(user, current_day, user_data, user_id,
+                                 user_data[user_id][current_day]['selected_meal'])
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+        bot.set_state(user_id, CourseInteraction.initial, chat_id)
+
+
 
     elif answer == 'try_again':
         bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
@@ -189,42 +198,46 @@ def continue_handle_choose_product(call: CallbackQuery):
 def handle_grams_count(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
-    if answer.isdigit() and 0 < int(answer) < 5000:
-        amount = int(message.text)
-        markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                        'Сколько еще можно ккал?👀', 'Появились вопросики...')
-        bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
-        user = PaidUser.objects.get(user=user_id)
-        current_day = (timezone.now().date() - user.paid_day).days
-        selected_meal = user_data[user_id][current_day]['selected_meal']
-        product = f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"
+    try:
+        answer = answer.replace(',', '.')
+        amount = float(answer)
+        if -1 < int(answer) < 5001:
+            markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                            'Сколько еще можно ккал?👀', 'Появились вопросики...')
+            bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
+            user = PaidUser.objects.get(user=user_id)
+            current_day = (timezone.now().date() - user.paid_day).days
+            selected_meal = user_data[user_id][current_day]['selected_meal']
+            product = f"{calories_data[user_id]['needed_data'][1][calories_data[user_id]['chosen_number']]}"
 
-        if product in user_data[user_id][current_day][selected_meal]:
-            old_calories, _, old_proteins, _ = user_data[user_id][current_day][selected_meal][product].split()
-            old_calories = float(old_calories)
-            old_proteins = float(old_proteins.rstrip('г'))
+            if product in user_data[user_id][current_day][selected_meal]:
+                old_calories, _, old_proteins, _ = user_data[user_id][current_day][selected_meal][product].split()
+                old_calories = float(old_calories)
+                old_proteins = float(old_proteins.rstrip('г'))
 
-            new_calories = round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1) + old_calories
-            new_proteins = round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1) + old_proteins
+                new_calories = round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1) + old_calories
+                new_proteins = round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1) + old_proteins
 
-            user_data[user_id][current_day][selected_meal][product] = f"{new_calories} ккал {new_proteins}г белков"
-        else:
-            user_data[user_id][current_day][selected_meal][product] = \
-                f"{round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
-                f"{round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
+                user_data[user_id][current_day][selected_meal][product] = f"{new_calories} ккал {new_proteins}г белков"
+            else:
+                user_data[user_id][current_day][selected_meal][product] = \
+                    f"{round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1)} ккал " \
+                    f"{round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1)}г белков"
 
-        course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
-        meal, _ = Meal.objects.get_or_create(course_day=course_day,
-                                             meal_type=user_data[user_id][current_day]['selected_meal'])
-        update_meal(meal,
-                    round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1),  # калории
-                    round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1))
-        update_courseday_calories(course_day)
+            course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
+            meal, _ = Meal.objects.get_or_create(course_day=course_day,
+                                                 meal_type=user_data[user_id][current_day]['selected_meal'])
+            update_meal(meal,
+                        round(float(calories_data[user_id]['KBJU_data'][0]) * (amount / 100), 1),  # калории
+                        round(float(calories_data[user_id]['KBJU_data'][1]) * (amount / 100), 1))
+            update_courseday_calories(course_day)
 
-        text, markup = meal_info(user, current_day, user_data, user_id,
-                                 meal=user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
-        bot.set_state(user_id, CourseInteraction.initial, chat_id)
+            text, markup = meal_info(user, current_day, user_data, user_id,
+                                     meal=user_data[user_id][current_day]['selected_meal'])
+            bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+            bot.set_state(user_id, CourseInteraction.initial, chat_id)
+    except:
+        bot.send_message('Кажется, вы ввели что-то не так, попробуйте еще раз. Например, 150:')
 
 
 @bot.callback_query_handler(state=CourseInteraction.choose_amount, func=lambda call: call.data)
