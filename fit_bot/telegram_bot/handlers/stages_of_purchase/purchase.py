@@ -26,7 +26,7 @@ def add_data(user, tag, info):
 def after_greeting(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
 
-    markup = create_inline_markup('Появились вопросики...')
+    markup = create_keyboard_markup('Появились вопросики...')
 
     test = 'AgACAgIAAxkBAAIxZmTWibqN_mHYK-1uJs08CdoexIw0AAI4zDEb8Jm5SqYMWroMFb56AQADAgADeQADMAQ'
     official = 'AgACAgIAAxkBAAEBJA9k2rj2-rChgpOYjuzj5M0XhhxWVwAC4coxG3dI2EqAfXmGAAHDqlABAAMCAAN5AAMwBA'
