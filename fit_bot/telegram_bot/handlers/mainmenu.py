@@ -83,12 +83,6 @@ def start_message(message: Message):
         #     time.sleep(3)
 
 
-
-
-
-
-
-
 @bot.message_handler(func=lambda message: message.text == 'Появились вопросики...')
 def info(message: Message):
     bot.send_message(chat_id=message.chat.id,

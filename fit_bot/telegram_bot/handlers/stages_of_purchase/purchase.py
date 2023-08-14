@@ -6,7 +6,7 @@ from datetime import date
 from django.shortcuts import get_object_or_404
 from django.db.models import F
 
-from ..mainmenu import create_inline_markup, get_id
+from ..mainmenu import create_inline_markup, get_id, create_keyboard_markup
 from ...loader import bot
 from ...states import PurchaseStates
 from ...models import UnpaidUser, PaidUser, BankCards
@@ -25,13 +25,16 @@ def add_data(user, tag, info):
 @bot.callback_query_handler(func=lambda call: call.data == 'Go_for_it')
 def after_greeting(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
+
+    markup = create_inline_markup('Появились вопросики...')
+
     test = 'AgACAgIAAxkBAAIxZmTWibqN_mHYK-1uJs08CdoexIw0AAI4zDEb8Jm5SqYMWroMFb56AQADAgADeQADMAQ'
     official = 'AgACAgIAAxkBAAEBJA9k2rj2-rChgpOYjuzj5M0XhhxWVwAC4coxG3dI2EqAfXmGAAHDqlABAAMCAAN5AAMwBA'
     text = '👋 Привет, меня зовут Лиза\n\n' \
            'Я – виртуальный ассистент Ибрата и буду помогать вам на всем ' \
            'пути взаимодействия с ботом ☺️'
 
-    bot.send_photo(chat_id, photo=official, caption=text)
+    bot.send_photo(chat_id, photo=official, caption=text, reply_markup=markup)
 
     markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
                                   ('Другое', 'other'))
