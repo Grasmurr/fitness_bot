@@ -154,12 +154,13 @@ def approve_payment(call):
 
         BankCards.objects.filter(card_number=user_data[int(call.data[8:])]['selected_bank']).update(
             number_of_activations=F('number_of_activations') + 1)
-
-        bot.send_message(chat_id=int(call.data[8:]), text='Ваша подписка подтверждена! '
-                                                          'С завтрашнего дня вам начнут приходить '
-                                                          'тренировки и инструкции к ним!'
-                                                          '\nА пока что, просим вас заполнить небольшой опросник!',
-                         reply_markup=markup)
+        official = 'AgACAgIAAxkBAAEBJBJk2rllWOyWYpscLJxfu7UWvw_dmwACgswxG3Rr2Er9A73F4DaK6QEAAwIAA3kAAzAE'
+        bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='Ваша подписка подтверждена! '
+                                                                           'С завтрашнего дня вам начнут приходить '
+                                                                           'тренировки и инструкции к ним!'
+                                                                           '\nА пока что, просим вас заполнить '
+                                                                           'небольшой опросник!',
+                       reply_markup=markup)
 
     else:
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
