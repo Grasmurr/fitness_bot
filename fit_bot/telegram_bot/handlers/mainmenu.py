@@ -62,7 +62,7 @@ def start_message(message: Message):
         markup = create_inline_markup(('Погнали!', 'Go_for_it'))
         # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
         # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
-        official = 'AgACAgIAAxkBAAEBJA9k2rj2-rChgpOYjuzj5M0XhhxWVwAC4coxG3dI2EqAfXmGAAHDqlABAAMCAAN5AAMwBA'
+        official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
         bot.send_video(user_id, video=official, reply_markup=markup)
 
         # daily_contents = Mailing.objects.filter(day=0)
