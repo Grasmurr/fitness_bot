@@ -22,12 +22,61 @@ def add_data(user, tag, info):
     user_data[user][tag] = info
 
 
-@bot.message_handler(func=lambda message: message.text == 'Приобрести подписку на курс')
-def handle_acknowledged(message: Message):
-    user_id, chat_id = get_id(message=message)
-    bot.set_state(user_id, PurchaseStates.initial, chat_id)
-    bot.send_message(user_id, ' Для начала введи свои инициалы, чтобы после оплаты мы проверили перевод\n\n'
-                              'Например: Имя и Отчество')
+@bot.callback_query_handler(func=lambda call: call.data == 'Go_for_it')
+def after_greeting(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
+    test = 'AgACAgIAAxkBAAIxZmTWibqN_mHYK-1uJs08CdoexIw0AAI4zDEb8Jm5SqYMWroMFb56AQADAgADeQADMAQ'
+
+    text = '👋 Привет, меня зовут Лиза\n\n' \
+           'Я – виртуальный ассистент Ибрата и буду помогать вам на всем ' \
+           'пути взаимодействия с ботом ☺️'
+
+    bot.send_photo(chat_id, photo=test, caption=text)
+
+    markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
+                                  ('Другое', 'other'))
+
+    bot.send_message(chat_id, text='Чтобы получить доступ к программе, выберите удобный для вас способ оплаты:',
+                     reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['tinkoff', 'click', 'other'])
+def after_greeting(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
+
+    answer = call.data
+    if answer == 'other':
+        markup = create_inline_markup(('назад', 'back'))
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Чтобы выбрать другой способ оплаты, напишите Ибрату @ibrat21', reply_markup=markup)
+    elif answer == 'tinkoff':
+        markup = create_inline_markup(('назад', 'back'))
+
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Введите, пожалуйста, свои инициалы, чтобы после оплаты мы смогли проверить '
+                                   'ваш перевод\n\nНапример: "Иван И."', reply_markup=markup)
+        add_data(user_id, 'chosen_method', 'тинькоф')
+        bot.set_state(user_id, PurchaseStates.initial, chat_id)
+
+    elif answer == 'click':
+        markup = create_inline_markup(('назад', 'back'))
+
+        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                              text='Введите, пожалуйста, свои имя и фамилию, чтобы после оплаты мы смогли '
+                                   'проверить ваш перевод\n\nНапример: "Иван Иванов"', reply_markup=markup)
+        add_data(user_id, 'chosen_method', 'click')
+        bot.set_state(user_id, PurchaseStates.initial, chat_id)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == 'back')
+def back_button_while_purchase(call: CallbackQuery):
+    user_id, chat_id = get_id(call=call)
+    markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
+                                  ('Другое', 'other'))
+
+    bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
+                          text='Чтобы получить доступ к программе, выберите удобный для вас способ оплаты:',
+                          reply_markup=markup)
 
 
 @bot.message_handler(state=PurchaseStates.initial)
@@ -36,25 +85,26 @@ def ask_initials(message: Message):
     initials = message.text.strip()
     if len(initials.split()) == 2:
         markup = create_inline_markup(('Продолжить', 'continue'), ('Изменить', 'back'))
-        bot.send_message(user_id, text=f'Ты ввел следущие инициалы: {initials}, продолжить?', reply_markup=markup)
+        bot.send_message(user_id, text=f'Вы ввели следущие инициалы: *{initials}*, продолжить?',
+                         reply_markup=markup, parse_mode='Markdown')
         add_data(user_id, 'initials', initials)
     else:
-        bot.send_message(user_id, 'Пожалуйста, введите свои инициалы (имя и отчество) через пробел.')
+        bot.send_message(user_id, 'Пожалуйста, введите свои инициалы через пробел. ')
 
 
-@bot.callback_query_handler(state=PurchaseStates.initial,
-                            func=lambda call: call.data in ['continue', 'back'])
+@bot.callback_query_handler(state=PurchaseStates.initial, func=lambda call: call.data in ['continue', 'back'])
 def handle_initials(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
     answer = call.data
     if answer == 'continue':
-        bot.set_state(user_id, PurchaseStates.added_initials, chat_id)
-        banks = BankCards.objects.filter(number_of_activations__lte=46)
-        markup = InlineKeyboardMarkup()
-        for bank in banks:
-            button = InlineKeyboardButton(text=f'{bank.bank_name}', callback_data=f'bank_{bank.card_number}')
-            markup.add(button)
-        bot.send_message(user_id, f"Хорошо, а теперь выбери удобный банк оплаты:", reply_markup=markup)
+        search_term = user_data[user_id]['chosen_method']
+        cards_with_term = BankCards.objects.filter(bank_name__icontains=search_term)
+        card_number = [card.card_number for card in cards_with_term][0]
+
+        markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
+
+        bot.send_message(user_id, f"Доступ к программе уже близко!\n\nОсталось перевести оплату по реквизитам: "
+                                  f"\n\n{card_number}", reply_markup=markup)
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
 
     else:
@@ -62,26 +112,12 @@ def handle_initials(call: CallbackQuery):
                               message_id=call.message.message_id, reply_markup=None)
 
 
-# Обработчик нажатия на кнопку выбора банка
-@bot.callback_query_handler(state=PurchaseStates.choose_bank, func=lambda call: call.data.startswith('bank_'))
-def select_bank(call):
-    user_id, chat_id = get_id(call=call)
-    if call.data.startswith('bank_'):
-        bank_id = call.data.split('_')[1]
-        bank = get_object_or_404(BankCards, card_number=bank_id)
-        add_data(user_id, 'selected_bank', bank.card_number)
-    markup = create_inline_markup(('Я оплатил', 'paid'),)
-    bot.edit_message_text(chat_id=call.message.chat.id, text=f"Круто, а теперь лови реквизиты для оплаты: "
-                                           f"\n\nНомер карты: {user_data[user_id]['selected_bank']}",
-                          message_id=call.message.message_id, reply_markup=markup)
-
-
 @bot.callback_query_handler(state=PurchaseStates.choose_bank, func=lambda call: call.data == 'paid')
 def handle_payment(call):
     user_id, chat_id = get_id(call=call)
     markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
     bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
-                          text="Вы уверены, что перевели?",
+                          text="Подтвердите, что совершили перевод 👀",
                           reply_markup=markup)
 
 
@@ -104,8 +140,6 @@ def confirm_payment(call):
                              reply_markup=markup)
         bot.send_message(user_id, "Доступ к 21FIT отправим не более чем за 24 часа...")
         bot.answer_callback_query(call.id)
-    else:
-        select_bank(call)
 
 
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,

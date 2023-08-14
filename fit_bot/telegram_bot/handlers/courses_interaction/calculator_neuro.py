@@ -13,14 +13,6 @@ from .edit_calories import user_data
 calories_data = {}
 
 
-# @bot.message_handler(content_types=['photo'])
-# def return_photo_id(message: Message):
-#     file_id = message.photo[-1].file_id
-#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-#     print(f"Received photo with id: {file_id}")
-#     bot.send_photo(message.chat.id, file_id)
-
-
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'add_product')
 def add_new_product(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
@@ -121,8 +113,6 @@ def handle_choosen_product(call: CallbackQuery):
                                  user_data[user_id][current_day]['selected_meal'])
         bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
-
-
 
     elif answer == 'try_again':
         bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,

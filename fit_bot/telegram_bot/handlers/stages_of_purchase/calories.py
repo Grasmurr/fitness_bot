@@ -42,7 +42,7 @@ def run(call):
 def start_calories_norm(call):
     user_id, chat_id = get_id(call=call)
 
-    markup = create_inline_markup(('Старт!', 'startsurvey'), ('Отмена', 'stopsurvey'))
+    markup = create_inline_markup(('Старт!', 'startsurvey'))
 
     bot.send_message(text='Итак, вам будут заданы 8 вопросов касающиеся ваших данных, '
                           'по которым мы сможем определить вашу ежедневную норму калорий, '
@@ -51,30 +51,26 @@ def start_calories_norm(call):
     bot.set_state(user_id, TestStates.start_test, chat_id)
 
 
-@bot.callback_query_handler(state=TestStates.start_test,
-                            func=lambda call: call.data in ['startsurvey', 'stopsurvey'])
+@bot.callback_query_handler(state=TestStates.start_test, func=lambda call: call.data == 'startsurvey')
 def start_survey(call):
     user_id, chat_id = get_id(call=call)
     req = call.data
-    if req == 'startsurvey':
-        bot.send_message(user_id, "Какой у Вас пол? Введите 'М' или 'Ж'.", reply_markup=ReplyKeyboardRemove())
-        bot.set_state(user_id, TestStates.choose_gender, chat_id)
-    else:
-        bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+    bot.send_message(user_id, "Какой у Вас пол? Введите 'М' или 'Ж'.", reply_markup=ReplyKeyboardRemove())
+    bot.set_state(user_id, TestStates.choose_gender, chat_id)
 
 
 def process_start_state(message):
     name = message.from_user.full_name
     user_id, chat_id = get_id(message=message)
-    response = f"Спасибо! Вот Ваши данные:\n" \
-               f"Пол: {user_data[user_id]['gender']}\n" \
-               f"Рост: {user_data[user_id]['height']} см\n" \
-               f"Вес: {user_data[user_id]['weight']} кг\n" \
-               f"Возраст: {user_data[user_id]['age']} лет\n" \
-               f"Место: {user_data[user_id]['place']}\n" \
-               f"Уровень: {user_data[user_id]['experience']}\n" \
-               f"Цель: {user_data[user_id]['goal']}"
-    bot.send_message(user_id, response)
+    # response = f"Спасибо! Вот Ваши данные:\n" \
+    #            f"Пол: {user_data[user_id]['gender']}\n" \
+    #            f"Рост: {user_data[user_id]['height']} см\n" \
+    #            f"Вес: {user_data[user_id]['weight']} кг\n" \
+    #            f"Возраст: {user_data[user_id]['age']} лет\n" \
+    #            f"Место: {user_data[user_id]['place']}\n" \
+    #            f"Уровень: {user_data[user_id]['experience']}\n" \
+    #            f"Цель: {user_data[user_id]['goal']}"
+    # bot.send_message(user_id, response)
     activity_levels = [1.2, 1.375, 1.55, 1.725, 1.9]
     activity_level = activity_levels[user_data[user_id]['activity'] - 1]
 

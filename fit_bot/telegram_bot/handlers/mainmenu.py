@@ -1,13 +1,22 @@
 import time
 
 from telebot.types import Message, ReplyKeyboardMarkup, KeyboardButton,\
-    InlineKeyboardMarkup, InlineKeyboardButton
+    InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from telebot import custom_filters
 
 from ..loader import bot
 from ..models import UnpaidUser, PaidUser
 from ..states import CourseInteraction
 from courses.models import Mailing
+
+
+@bot.message_handler(content_types=['photo'])
+def return_photo_id(message: Message):
+    file_id = message.photo[-1].file_id
+    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+    print(f"Received photo with id: {file_id}")
+    bot.send_photo(message.chat.id, file_id)
+
 
 
 def get_id(message=None, call=None):
@@ -50,24 +59,34 @@ def start_message(message: Message):
     else:
         user = UnpaidUser(user_id=message.from_user.id)
         user.save()
-        markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
+        markup = create_inline_markup(('Погнали!', 'Go_for_it'))
+        # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
+        # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
+        official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
+        bot.send_video(user_id, video=official, reply_markup=markup)
 
-        daily_contents = Mailing.objects.filter(day=0)
+        # daily_contents = Mailing.objects.filter(day=0)
+        #
+        # for content in daily_contents:
+        #     if content.content_type == 'V':
+        #         bot.send_video(chat_id=user.user_id, video=content.video_file_id,
+        #                        caption=content.caption, reply_markup=markup)
+        #     elif content.content_type == 'T':
+        #         bot.send_message(chat_id=user.user_id, text=content.caption,
+        #                          reply_markup=markup)
+        #     elif content.content_type == 'P':
+        #         bot.send_photo(chat_id=user.user_id, photo=content.photo_file_id,
+        #                        caption=content.caption, reply_markup=markup)
+        #     elif content.content_type == 'G':
+        #         bot.send_document(chat_id=user.user_id, document=content.gif_file_id,
+        #                           caption=content.caption, reply_markup=markup)
+        #     time.sleep(3)
 
-        for content in daily_contents:
-            if content.content_type == 'V':
-                bot.send_video(chat_id=user.user_id, video=content.video_file_id,
-                               caption=content.caption, reply_markup=markup)
-            elif content.content_type == 'T':
-                bot.send_message(chat_id=user.user_id, text=content.caption,
-                                 reply_markup=markup)
-            elif content.content_type == 'P':
-                bot.send_photo(chat_id=user.user_id, photo=content.photo_file_id,
-                               caption=content.caption, reply_markup=markup)
-            elif content.content_type == 'G':
-                bot.send_document(chat_id=user.user_id, document=content.gif_file_id,
-                                  caption=content.caption, reply_markup=markup)
-            time.sleep(3)
+
+
+
+
+
 
 
 @bot.message_handler(func=lambda message: message.text == 'Появились вопросики...')
