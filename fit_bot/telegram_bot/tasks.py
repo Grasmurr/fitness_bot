@@ -11,7 +11,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 import datetime
 
-from .models import PaidUser, FinishedUser, CourseDay
+from .models import PaidUser, FinishedUser, CourseDay, UnpaidUser
 from courses.models import Категории, Content, Mailing, Training
 from .loader import bot
 from .states import States
@@ -133,7 +133,9 @@ def check_and_send_content():
                     уровень=user.уровень,
                 )
                 finished_user.save()
+                UnpaidUser.objects.filter(user_id=user.user).update(has_paid=False)
                 user.delete()
+
         except Exception as E:
             bot.send_message(305378717, f"Ошибка: {E}")
 

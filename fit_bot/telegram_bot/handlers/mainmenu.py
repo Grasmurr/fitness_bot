@@ -54,8 +54,17 @@ def start_message(message: Message):
     user, created = UnpaidUser.objects.get_or_create(user_id=user_id)
     if created:
         user.save()
-    if user.has_paid:
+    try:
+        paid_user = PaidUser.objects.get(user=user_id)
+        # Если пользователь найден в модели PaidUser, вызываем функцию paid_user_main_menu
         paid_user_main_menu(message)
+        return
+    except PaidUser.DoesNotExist:
+        pass
+
+    if user.has_paid:
+        return
+
     else:
         username, full_name = message.from_user.username, message.from_user.full_name
 

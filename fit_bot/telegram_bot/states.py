@@ -73,3 +73,7 @@ class AdminStates(StatesGroup):
     enter_mailing_text = State()
     upload_photo = State()
 
+
+class AfterPurchaseStates(StatesGroup):
+    initial = State()
+

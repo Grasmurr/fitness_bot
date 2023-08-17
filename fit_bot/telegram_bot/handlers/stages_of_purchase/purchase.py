@@ -8,7 +8,7 @@ from django.db.models import F
 
 from ..mainmenu import create_inline_markup, get_id, create_keyboard_markup
 from ...loader import bot
-from ...states import PurchaseStates
+from ...states import PurchaseStates, AfterPurchaseStates
 from ...models import UnpaidUser, PaidUser, BankCards
 
 ADMIN_CHAT_ID = 58790442
@@ -100,14 +100,20 @@ def handle_initials(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
     answer = call.data
     if answer == 'continue':
+
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+
         search_term = user_data[user_id]['chosen_method']
         cards_with_term = BankCards.objects.filter(bank_name__icontains=search_term)
         card_number = [card.card_number for card in cards_with_term][0]
 
         markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
 
-        bot.send_message(user_id, f"Доступ к программе уже близко!\n\nОсталось перевести оплату по реквизитам: "
-                                  f"\n\n{card_number}", reply_markup=markup)
+        bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
+                       chat_id=user_id,
+                       message_id=call.message.message_id,
+                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
+                               f"\n\n{card_number}", reply_markup=markup)
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
 
     else:
@@ -151,7 +157,8 @@ def approve_payment(call):
     if call.data[:8] == 'confsubs':
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         markup = InlineKeyboardMarkup()
-        button1 = InlineKeyboardButton(text='Заполнить!', callback_data='fillthetest')
+        button1 = InlineKeyboardButton(text='Чат коучинга', url='https://t.me/+o5lBij2LZyMyZDMy')
+        # button1 = InlineKeyboardButton(text='Заполнить!', callback_data='fillthetest')
         markup.add(button1)
         UnpaidUser.objects.filter(user_id=int(call.data[8:])).update(has_paid=True)
 
@@ -159,12 +166,11 @@ def approve_payment(call):
         BankCards.objects.filter(bank_name__icontains=search_term).update(
             number_of_activations=F('number_of_activations') + 1)
         official = 'AgACAgIAAxkBAAEBJBJk2rllWOyWYpscLJxfu7UWvw_dmwACgswxG3Rr2Er9A73F4DaK6QEAAwIAA3kAAzAE'
-        bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='Ваша подписка подтверждена! '
-                                                                           'С завтрашнего дня вам начнут приходить '
-                                                                           'тренировки и инструкции к ним!'
-                                                                           '\nА пока что, просим вас заполнить '
-                                                                           'небольшой опросник!',
+        bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='Ваша подписка подтверждена!❤️‍🔥\n\n'
+                                                                           'Для дальнейших действий переходите в '
+                                                                           'общий чат коучинга, нажав на кнопку',
                        reply_markup=markup)
+        bot.set_state(user_id=int(call.data[8:]), state=AfterPurchaseStates.initial, chat_id=int(call.data[8:]))
 
     else:
         bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)

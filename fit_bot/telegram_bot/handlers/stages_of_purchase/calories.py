@@ -3,7 +3,7 @@ from datetime import date
 from telebot import custom_filters
 
 from ...loader import bot
-from ...states import PurchaseStates, TestStates
+from ...states import PurchaseStates, TestStates, AfterPurchaseStates
 from ...handlers.mainmenu import get_id, create_inline_markup, create_keyboard_markup
 from ...models import PaidUser
 from .define_timezone import start_timezone_check
@@ -37,10 +37,9 @@ def run(call):
     start_calories_norm(call)
 
 
-@bot.callback_query_handler(state=PurchaseStates.choose_bank,
-                            func=lambda call: call.data == 'fillthetest')
-def start_calories_norm(call):
-    user_id, chat_id = get_id(call=call)
+@bot.callback_query_handler(state=AfterPurchaseStates.initial, func=lambda message: message.text == 'тест')
+def start_calories_norm(message: Message):
+    user_id, chat_id = get_id(message=message)
 
     markup = create_inline_markup(('Старт!', 'startsurvey'))
 
@@ -102,8 +101,8 @@ def process_start_state(message):
                                       f"\n\nУчитывайте это значение при составлении своего"
                                       f" рациона питания во время прохождения курса 21 день.")
         else:
-            PaidUser.objects.filter(user=user_id).update(calories=round((88.362 + 13.397 * user_data[user_id][
-                'weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level,
+            PaidUser.objects.filter(user=user_id).update(calories=round((10 * user_data[user_id][
+                'weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level + 5,
                                                                         1) * 0.9)
             bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
                                   f"{round(round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level, 1) * 0.9, 1)} ккал в день"
@@ -122,8 +121,8 @@ def process_start_state(message):
                                       f"\n\nУчитывайте это значение при составлении"
                                       f" своего рациона питания во время прохождения курса 21 день.")
         else:
-            PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
-            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875)
+            PaidUser.objects.filter(user=user_id).update(calories=round((10 * user_data[user_id][
+            'weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level - 161, 1) * 0.875)
             bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
                                   f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875, 1)} ккал в день"
                                   f"\n\nУчитывайте это значение при составлении"
