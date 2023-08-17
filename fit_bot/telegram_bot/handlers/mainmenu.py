@@ -65,16 +65,16 @@ def start_message(message: Message):
     if user.has_paid:
         return
 
-    else:
-        username, full_name = message.from_user.username, message.from_user.full_name
 
-        user = UnpaidUser(user_id=message.from_user.id, username=username, full_name=full_name)
-        user.save()
-        markup = create_inline_markup(('Погнали!', 'Go_for_it'))
-        # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
-        # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
-        official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
-        bot.send_video(user_id, video=official, reply_markup=markup)
+    username, full_name = message.from_user.username, message.from_user.full_name
+
+    user = UnpaidUser(user_id=message.from_user.id, username=username, full_name=full_name)
+    user.save()
+    markup = create_inline_markup(('Погнали!', 'Go_for_it'))
+    # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
+    # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
+    official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
+    bot.send_video(user_id, video=official, reply_markup=markup)
 
         # daily_contents = Mailing.objects.filter(day=0)
         #
