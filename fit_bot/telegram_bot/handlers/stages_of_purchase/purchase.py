@@ -114,7 +114,7 @@ def handle_initials(call: CallbackQuery):
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
 
     else:
-        bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можешь ввести инициалы еще раз:',
+        bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можете ввести инициалы еще раз:',
                               message_id=call.message.message_id, reply_markup=None)
 
 
@@ -129,10 +129,11 @@ def handle_payment(call):
                          text="Подтвердите, что совершили перевод 👀",
                          reply_markup=markup)
     elif answer == 'back':
-        initials = user_data[user_id]['initials']
-        markup = create_inline_markup(('Продолжить', 'continue'), ('Изменить', 'back'))
-        bot.send_message(user_id, text=f'Вы ввели следущие инициалы: *{initials}*, продолжить?',
-                         reply_markup=markup, parse_mode='Markdown')
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+        bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можете ввести инициалы еще раз:',
+                              message_id=call.message.message_id, reply_markup=None)
+        bot.set_state(user_id, PurchaseStates.initial, chat_id)
+
 
 
 
