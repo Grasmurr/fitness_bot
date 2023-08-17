@@ -37,7 +37,7 @@ def run(call):
     start_calories_norm(call)
 
 
-@bot.callback_query_handler(state=AfterPurchaseStates.initial, func=lambda message: message.text == 'тест')
+@bot.message_handler(state=AfterPurchaseStates.initial, func=lambda message: message.text == 'тест')
 def start_calories_norm(message: Message):
     user_id, chat_id = get_id(message=message)
 

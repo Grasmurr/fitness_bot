@@ -136,8 +136,6 @@ def handle_payment(call):
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
 
-
-
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,
                             func=lambda call: call.data in ['confirm_payment', 'go_back'])
 def confirm_payment(call):
