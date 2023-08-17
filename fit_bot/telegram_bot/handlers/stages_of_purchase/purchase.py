@@ -100,9 +100,7 @@ def handle_initials(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
     answer = call.data
     if answer == 'continue':
-
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
-
         search_term = user_data[user_id]['chosen_method']
         cards_with_term = BankCards.objects.filter(bank_name__icontains=search_term)
         card_number = [card.card_number for card in cards_with_term][0]
@@ -120,14 +118,22 @@ def handle_initials(call: CallbackQuery):
                               message_id=call.message.message_id, reply_markup=None)
 
 
-@bot.callback_query_handler(state=PurchaseStates.choose_bank, func=lambda call: call.data == 'paid')
+@bot.callback_query_handler(state=PurchaseStates.choose_bank, func=lambda call: call.data in ['paid', 'back'])
 def handle_payment(call):
     user_id, chat_id = get_id(call=call)
-    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
-    markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
-    bot.send_message(chat_id=chat_id,
-                     text="Подтвердите, что совершили перевод 👀",
-                     reply_markup=markup)
+    answer = call.data
+    if answer == 'paid':
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+        markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
+        bot.send_message(chat_id=chat_id,
+                         text="Подтвердите, что совершили перевод 👀",
+                         reply_markup=markup)
+    elif answer == 'back':
+        initials = user_data[user_id]['initials']
+        markup = create_inline_markup(('Продолжить', 'continue'), ('Изменить', 'back'))
+        bot.send_message(user_id, text=f'Вы ввели следущие инициалы: *{initials}*, продолжить?',
+                         reply_markup=markup, parse_mode='Markdown')
+
 
 
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,
@@ -149,6 +155,18 @@ def confirm_payment(call):
                              reply_markup=markup)
         bot.send_message(user_id, "Доступ к 21FIT отправим не более чем за 24 часа...")
         bot.answer_callback_query(call.id)
+    else:
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+        search_term = user_data[user_id]['chosen_method']
+        cards_with_term = BankCards.objects.filter(bank_name__icontains=search_term)
+        card_number = [card.card_number for card in cards_with_term][0]
+
+        markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
+
+        bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
+                       chat_id=user_id,
+                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
+                               f"\n\n{card_number}", reply_markup=markup)
 
 
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,
