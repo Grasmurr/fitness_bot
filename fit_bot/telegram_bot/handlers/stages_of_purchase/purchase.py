@@ -112,7 +112,6 @@ def handle_initials(call: CallbackQuery):
                        caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
                                f"\n\n{card_number}", reply_markup=markup)
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
-
     else:
         bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можете ввести инициалы еще раз:',
                               message_id=call.message.message_id, reply_markup=None)
@@ -130,8 +129,10 @@ def handle_payment(call):
                          reply_markup=markup)
     elif answer == 'back':
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
-        bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можете ввести инициалы еще раз:',
-                              message_id=call.message.message_id, reply_markup=None)
+        markup = create_inline_markup(('Продолжить', 'continue'), ('Изменить', 'back'))
+        initials = user_data[user_id]['initials']
+        bot.send_message(user_id, text=f'Вы ввели следущие инициалы: *{initials}*, продолжить?',
+                         reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
 
