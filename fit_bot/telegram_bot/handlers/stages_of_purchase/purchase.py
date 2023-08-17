@@ -123,10 +123,11 @@ def handle_initials(call: CallbackQuery):
 @bot.callback_query_handler(state=PurchaseStates.choose_bank, func=lambda call: call.data == 'paid')
 def handle_payment(call):
     user_id, chat_id = get_id(call=call)
+    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
     markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
-    bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
-                          text="Подтвердите, что совершили перевод 👀",
-                          reply_markup=markup)
+    bot.send_message(chat_id=chat_id,
+                     text="Подтвердите, что совершили перевод 👀",
+                     reply_markup=markup)
 
 
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,
@@ -176,7 +177,6 @@ def approve_payment(call):
         bot.send_message(int(call.data[4:]),
                          'Кажется, что-то пошло не так и вам не одобрили подписку,'
                          ' либо вы случайно нажали на кнопку оплаты')
-
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))
