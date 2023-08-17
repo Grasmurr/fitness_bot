@@ -106,7 +106,7 @@ def handle_choosen_product(call: CallbackQuery):
     if answer == 'cancel_product':
         bot.delete_message(chat_id, message_id=call.message.message_id)
         markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                        'Сколько еще можно ккал?👀', 'Появились вопросики...')
+                                        'Сколько еще можно ккал?👀', 'Карта продукта', 'Появились вопросики...')
         bot.send_message(chat_id=chat_id, text='Главное меню', reply_markup=markup)
 
         text, markup = meal_info(user, current_day, user_data, user_id,
@@ -193,7 +193,7 @@ def handle_grams_count(message: Message):
         amount = float(answer)
         if -1 < int(answer) < 5001:
             markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                            'Сколько еще можно ккал?👀', 'Появились вопросики...')
+                                            'Сколько еще можно ккал?👀', 'Карта продукта', 'Появились вопросики...')
             bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
             user = PaidUser.objects.get(user=user_id)
             current_day = (timezone.now().date() - user.paid_day).days
@@ -240,7 +240,7 @@ def handle_amount(call: CallbackQuery):
         amount = int(answer)
         bot.delete_message(chat_id, message_id=call.message.message_id)
         markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                        'Сколько еще можно ккал?👀', 'Появились вопросики...')
+                                        'Сколько еще можно ккал?👀', 'Карта продукта', 'Появились вопросики...')
         bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days

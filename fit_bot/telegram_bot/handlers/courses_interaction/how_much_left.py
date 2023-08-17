@@ -37,4 +37,9 @@ def calories_info(message: Message):
         bot.send_message(user_id, text)
 
 
+@bot.message_handler(state=CourseInteraction.initial, func=lambda message: message.text == 'Карта продукта')
+def handle_update_calories(message: Message):
+    pass
+
+
 bot.add_custom_filter(custom_filters.StateFilter(bot))

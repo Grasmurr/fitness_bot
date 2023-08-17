@@ -10,12 +10,12 @@ from ..states import CourseInteraction
 from courses.models import Mailing
 
 
-# @bot.message_handler(content_types=['photo'])
-# def return_photo_id(message: Message):
-#     file_id = message.photo[-1].file_id
-#     bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
-#     print(f"Received photo with id: {file_id}")
-#     bot.send_photo(message.chat.id, file_id)
+@bot.message_handler(content_types=['photo'])
+def return_photo_id(message: Message):
+    file_id = message.photo[-1].file_id
+    bot.send_message(message.from_user.id, f"Received photo with id: {file_id}")
+    print(f"Received photo with id: {file_id}")
+    bot.send_photo(message.chat.id, file_id)
 
 
 
@@ -57,7 +57,9 @@ def start_message(message: Message):
     if user.has_paid:
         paid_user_main_menu(message)
     else:
-        user = UnpaidUser(user_id=message.from_user.id)
+        username, full_name = message.from_user.username, message.from_user.full_name
+
+        user = UnpaidUser(user_id=message.from_user.id, username=username, full_name=full_name)
         user.save()
         markup = create_inline_markup(('Погнали!', 'Go_for_it'))
         # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
@@ -97,7 +99,7 @@ def just_main_menu(message: Message):
 def paid_user_main_menu(message: Message):
     user_id, chat_id = get_id(message=message)
     markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                    'Сколько еще можно ккал?👀', 'Появились вопросики...')
+                                    'Сколько еще можно ккал?👀', 'Карта продукта', 'Появились вопросики...')
     bot.set_state(user_id, CourseInteraction.initial, chat_id)
     bot.send_message(user_id, text='Главное меню', reply_markup=markup)
 

@@ -8,9 +8,11 @@ from django.dispatch import receiver
 class UnpaidUser(models.Model):
     user_id = models.BigIntegerField(primary_key=True)
     has_paid = models.BooleanField(default=False)
+    username = models.CharField(max_length=100, blank=True, null=True)
+    full_name = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"id - {self.user_id}"
+        return f"{self.full_name} - {self.username} (id - {self.user_id})"
 
     class Meta:
         app_label = 'telegram_bot'
@@ -49,7 +51,7 @@ class PaidUser(models.Model):
     уровень = models.CharField(max_length=16, choices=LEVEL, default='N')
 
     def __str__(self):
-        return f"{self.username} ({self.user})"
+        return f"{self.full_name} - {self.username} ({self.user})"
 
     class Meta:
         app_label = 'telegram_bot'

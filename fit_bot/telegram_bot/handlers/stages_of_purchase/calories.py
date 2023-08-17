@@ -195,24 +195,39 @@ def conduct_calories(message: Message):
     text = message.text
     if text.isdigit() and int(text) in [1, 2, 3, 4, 5]:
         add_data(user_id, 'activity', int(text))
-        markup = create_keyboard_markup('Набрать вес', 'Сбросить вес', row=True)
-        bot.send_message(user_id, 'Хотите ли вы набрать или сбросить вес?', reply_markup=markup)
-        bot.set_state(user_id, TestStates.ask_goal, chat_id)
-    else:
-        bot.send_message(user_id, "Пожалуйста, введите корректную цифру (1-5)")
 
-
-@bot.message_handler(state=TestStates.ask_goal, content_types=['text'])
-def conduct_calorie(message: Message):
-    user_id, chat_id = get_id(message=message)
-    text = message.text
-    if text in ['Набрать вес', 'Сбросить вес']:
-        add_data(user_id, 'goal', text)
+        add_data(user_id, 'goal', 'Сбросить вес')
         add_data(user_id, 'experience', 'Новичок')
         add_data(user_id, 'place', 'Дом')
         process_start_state(message)
+
+        # markup = create_keyboard_markup('Набрать вес', 'Сбросить вес', row=True)
+        # bot.send_message(user_id, 'Хотите ли вы набрать или сбросить вес?', reply_markup=markup)
+        # bot.set_state(user_id, TestStates.ask_goal, chat_id)
     else:
-        bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+        bot.send_message(user_id, "Пожалуйста, введите корректную цифру (1-5)")
+
+    #
+    # if text in ['Набрать вес', 'Сбросить вес']:
+    #     add_data(user_id, 'goal', 'Сбросить вес')
+    #     add_data(user_id, 'experience', 'Новичок')
+    #     add_data(user_id, 'place', 'Дом')
+    #     process_start_state(message)
+    # else:
+    #     bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+
+
+# @bot.message_handler(state=TestStates.ask_goal, content_types=['text'])
+# def conduct_calorie(message: Message):
+#     user_id, chat_id = get_id(message=message)
+#     text = message.text
+    # if text in ['Набрать вес', 'Сбросить вес']:
+    #     add_data(user_id, 'goal', text)
+    #     add_data(user_id, 'experience', 'Новичок')
+    #     add_data(user_id, 'place', 'Дом')
+    #     process_start_state(message)
+    # else:
+    #     bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
 
     # elif user_data[user_id]['state'] == States.ASK_GOAL:

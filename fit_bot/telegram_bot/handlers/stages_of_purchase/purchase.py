@@ -49,11 +49,11 @@ def after_greeting(call: CallbackQuery):
 
     answer = call.data
     if answer == 'other':
-        markup = create_inline_markup(('назад', 'back'))
+        markup = create_inline_markup(('назад', 'back_to_bank_choose'))
         bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
                               text='Чтобы выбрать другой способ оплаты, напишите Ибрату @ibrat21', reply_markup=markup)
     elif answer == 'tinkoff':
-        markup = create_inline_markup(('назад', 'back'))
+        markup = create_inline_markup(('назад', 'back_to_bank_choose'))
 
         bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
                               text='Введите, пожалуйста, свои инициалы, чтобы после оплаты мы смогли проверить '
@@ -62,7 +62,7 @@ def after_greeting(call: CallbackQuery):
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
     elif answer == 'click':
-        markup = create_inline_markup(('назад', 'back'))
+        markup = create_inline_markup(('назад', 'back_to_bank_choose'))
 
         bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
                               text='Введите, пожалуйста, свои имя и фамилию, чтобы после оплаты мы смогли '
@@ -71,7 +71,7 @@ def after_greeting(call: CallbackQuery):
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'back')
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_bank_choose')
 def back_button_while_purchase(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
     markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
@@ -155,7 +155,8 @@ def approve_payment(call):
         markup.add(button1)
         UnpaidUser.objects.filter(user_id=int(call.data[8:])).update(has_paid=True)
 
-        BankCards.objects.filter(card_number=user_data[int(call.data[8:])]['selected_bank']).update(
+        search_term = user_data[int(call.data[8:])]['chosen_method']
+        BankCards.objects.filter(bank_name__icontains=search_term).update(
             number_of_activations=F('number_of_activations') + 1)
         official = 'AgACAgIAAxkBAAEBJBJk2rllWOyWYpscLJxfu7UWvw_dmwACgswxG3Rr2Er9A73F4DaK6QEAAwIAA3kAAzAE'
         bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='Ваша подписка подтверждена! '
@@ -170,6 +171,7 @@ def approve_payment(call):
         bot.send_message(int(call.data[4:]),
                          'Кажется, что-то пошло не так и вам не одобрили подписку,'
                          ' либо вы случайно нажали на кнопку оплаты')
+
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))

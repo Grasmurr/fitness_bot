@@ -13,10 +13,12 @@ export_to_xlsx_action.short_description = "Выгрузить выбранные
 
 class UnpaidUserAdmin(admin.ModelAdmin):
     actions = [export_to_xlsx_action]
+    ordering = ['full_name']
 
 
 class PaidUserAdmin(admin.ModelAdmin):
     actions = [export_to_xlsx_action]
+    ordering = ['full_name']
 
 
 class UserCaloriesAdmin(admin.ModelAdmin):
