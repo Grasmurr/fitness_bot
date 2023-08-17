@@ -111,7 +111,6 @@ def handle_initials(call: CallbackQuery):
 
         bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
                        chat_id=user_id,
-                       message_id=call.message.message_id,
                        caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
                                f"\n\n{card_number}", reply_markup=markup)
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
