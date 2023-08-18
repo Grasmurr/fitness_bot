@@ -41,6 +41,7 @@ class PurchaseStates(StatesGroup):
 class TestStates(StatesGroup):
     initial = State()
     start_test = State()
+    ask_name = State()
     choose_gender = State()
     enter_height = State()
     enter_weight = State()
@@ -77,3 +78,6 @@ class AdminStates(StatesGroup):
 class AfterPurchaseStates(StatesGroup):
     initial = State()
 
+
+class GeopositionStates(StatesGroup):
+    initial = State()

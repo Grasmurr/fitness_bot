@@ -1,11 +1,12 @@
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from telebot import types
+from telebot import types, custom_filters
 import pytz
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from ...loader import bot
 from ..mainmenu import just_main_menu, paid_user_main_menu, create_keyboard_markup, get_id
 from ...models import PaidUser
+from ...states import GeopositionStates
 
 
 def start_timezone_check(message):
@@ -17,9 +18,10 @@ def start_timezone_check(message):
     markup.add(location_button, skip_button)
     bot.send_message(user_id, "Хотите отправить свое местоположение для определения часового пояса?",
                      reply_markup=markup)
+    bot.set_state(user_id, GeopositionStates.initial, chat_id)
 
 
-@bot.message_handler(content_types=['location'])
+@bot.message_handler(state=GeopositionStates.initial, content_types=['location'])
 def handle_location(message):
     user_id, chat_id = get_id(message=message)
     latitude = message.location.latitude
@@ -41,3 +43,6 @@ def skip_location(message):
     PaidUser.objects.filter(user=user_id).update(timezone=default_timezone)
     bot.send_message(user_id, "Спасибо!", reply_markup=types.ReplyKeyboardRemove())
     paid_user_main_menu(message)
+
+
+bot.add_custom_filter(custom_filters.StateFilter(bot))

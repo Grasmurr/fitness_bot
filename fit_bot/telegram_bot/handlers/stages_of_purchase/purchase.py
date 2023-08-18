@@ -125,7 +125,7 @@ def handle_payment(call):
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
         markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
         bot.send_message(chat_id=chat_id,
-                         text="Подтвердите, что совершили перевод 👀",
+                         text="Если уже оплатили, нажмите на кнопку «Подтвердить» ✅",
                          reply_markup=markup)
     elif answer == 'back':
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
@@ -153,7 +153,7 @@ def confirm_payment(call):
                              f"Пользователь {user_id}, {' '.join(user_data[user_id]['initials'].split()[-3:-1])} "
                              f"username отсутствует, оплатил подписку.",
                              reply_markup=markup)
-        bot.send_message(user_id, "Доступ к 21FIT отправим не более чем за 24 часа...")
+        bot.send_message(user_id, "Ваша подписка активируется в течение 24 часов...")
         bot.answer_callback_query(call.id)
     else:
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)

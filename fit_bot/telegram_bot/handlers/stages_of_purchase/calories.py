@@ -24,6 +24,16 @@ def is_valid_number(text):
     return False
 
 
+activity_dct = {
+    1: 'Нулевая',
+    2: 'Небольшая',
+    3: 'Умеренная',
+    4: 'Высокая',
+    5: 'Очень высокая'
+}
+
+
+
 @bot.message_handler(commands=['test'])
 def run_test(message):
     markup = InlineKeyboardMarkup()
@@ -42,45 +52,71 @@ def start_calories_norm(message: Message):
     user_id, chat_id = get_id(message=message)
 
     markup = create_inline_markup(('Старт!', 'startsurvey'))
-
-    bot.send_message(text='Итак, вам будут заданы 8 вопросов касающиеся ваших данных, '
-                          'по которым мы сможем определить вашу ежедневную норму калорий, '
-                          'а также подобрать наилучший курс. '
-                          'Чтобы начать, нажимайте старт!', chat_id=user_id, reply_markup=markup)
+    official = 'AgACAgIAAxkBAAEBKC5k33tlKTGQun6LZ0ZJarPiK7Nk5QACl8sxGyH1-Er1aA-lfQT9TAEAAwIAA3kAAzAE'
+    bot.send_photo(photo=official,
+                   caption='Приветик, это снова я!\n\nЧтобы мы составили для вас индивидуальный '
+                           'фитнес-план, вам будут заданы 8 вопросов (эмодзи)\n\nПожалуйста, '
+                           'отвечайте честно 🫡\n\nЧтобы начать, нажмите ”Старт”!',
+                   chat_id=user_id,
+                   reply_markup=markup)
     bot.set_state(user_id, TestStates.start_test, chat_id)
 
 
 @bot.callback_query_handler(state=TestStates.start_test, func=lambda call: call.data == 'startsurvey')
-def start_survey(call):
+def ask_name_before_survey(call):
     user_id, chat_id = get_id(call=call)
-    req = call.data
-    bot.send_message(user_id, "Какой у Вас пол? Введите 'М' или 'Ж'.", reply_markup=ReplyKeyboardRemove())
+
+    bot.send_message(chat_id=user_id,
+                     text='Как к вам обращаться? 👋\n\nВведите текстом свое имя. Например: "Ибрат"',
+                     reply_markup=ReplyKeyboardRemove())
+
+    bot.set_state(user_id, TestStates.ask_name)
+
+
+@bot.message_handler(state=TestStates.ask_name)
+def start_survey(message: Message):
+
+    user_id, chat_id = get_id(message=message)
+    add_data(user_id, 'name', message.text)
+
+    markup = create_keyboard_markup('М', 'Ж')
+    name = user_data[user_id]['name']
+    bot.send_message(user_id, f"{name}, укажите, пожалуйста, ваш пол:", reply_markup=markup)
     bot.set_state(user_id, TestStates.choose_gender, chat_id)
 
 
 def process_start_state(message):
-    name = message.from_user.full_name
+
     user_id, chat_id = get_id(message=message)
-    # response = f"Спасибо! Вот Ваши данные:\n" \
-    #            f"Пол: {user_data[user_id]['gender']}\n" \
-    #            f"Рост: {user_data[user_id]['height']} см\n" \
-    #            f"Вес: {user_data[user_id]['weight']} кг\n" \
-    #            f"Возраст: {user_data[user_id]['age']} лет\n" \
-    #            f"Место: {user_data[user_id]['place']}\n" \
-    #            f"Уровень: {user_data[user_id]['experience']}\n" \
-    #            f"Цель: {user_data[user_id]['goal']}"
-    # bot.send_message(user_id, response)
+
+    name = user_data[user_id]['name']
+    response = f"Вот Ваши данные:\n" \
+               f"Пол: {user_data[user_id]['gender']}\n" \
+               f"Рост: {user_data[user_id]['height']} см\n" \
+               f"Вес: {user_data[user_id]['weight']} кг\n" \
+               f"Возраст: {user_data[user_id]['age']} лет\n" \
+               f"Активность: {activity_dct[user_data[user_id]['activity']]}\n"
+
+    markup = create_keyboard_markup('Все верно!', 'Начать заново')
+
+    bot.send_message(user_id, response, markup)
     activity_levels = [1.2, 1.375, 1.55, 1.725, 1.9]
     activity_level = activity_levels[user_data[user_id]['activity'] - 1]
 
-    if user_data[user_id]['experience'] == 'Новичок': experience = 'N'
-    else: experience = 'P'
+    if user_data[user_id]['experience'] == 'Новичок':
+        experience = 'N'
+    else:
+        experience = 'P'
 
-    if user_data[user_id]['place'] == 'Дом': place = 'H'
-    else: place = 'G'
+    if user_data[user_id]['place'] == 'Дом':
+        place = 'H'
+    else:
+        place = 'G'
 
-    if user_data[user_id]['goal'] == 'Набрать вес': goal = 'G'
-    else: goal = 'L'
+    if user_data[user_id]['goal'] == 'Набрать вес':
+        goal = 'G'
+    else:
+        goal = 'L'
 
     user_info = bot.get_chat(user_id)
     username = user_info.username
@@ -94,20 +130,20 @@ def process_start_state(message):
                                                      proteins=round(user_data[user_id]['weight'] * 1.6, 1))
 
         if goal == 'G':
-            PaidUser.objects.filter(user=user_id).update(calories = round((88.362 + 13.397 * user_data[user_id][
-            'weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level, 1) * 1.1)
-            bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                      f"{round(round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level) * 1.1, 1)} ккал в день"
-                                      f"\n\nУчитывайте это значение при составлении своего"
-                                      f" рациона питания во время прохождения курса 21 день.")
+            PaidUser.objects.filter(user=user_id).update(calories=round((88.362 + 13.397 * user_data[user_id][
+                'weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level,
+                                                                        1) * 1.1)
+            # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
+            #                           f"{round(round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level) * 1.1, 1)} ккал в день"
+            #                           f"\n\nУчитывайте это значение при составлении своего"
+            #                           f" рациона питания во время прохождения курса 21 день.")
         else:
-            PaidUser.objects.filter(user=user_id).update(calories=round((10 * user_data[user_id][
-                'weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level + 5,
-                                                                        1) * 0.9)
-            bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                  f"{round(round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level, 1) * 0.9, 1)} ккал в день"
-                                  f"\n\nУчитывайте это значение при составлении своего"
-                                  f" рациона питания во время прохождения курса 21 день.")
+            norm = round(((10 * user_data[user_id]['weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level + 5) * 0.84, 1)
+            PaidUser.objects.filter(user=user_id).update(calories=norm)
+            # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
+            #                           f"{norm} ккал в день"
+            #                           f"\n\nУчитывайте это значение при составлении своего"
+            #                           f" рациона питания во время прохождения курса 21 день.")
 
     elif user_data[user_id]['gender'] == 'ж':
         PaidUser.objects.filter(user=user_id).update(пол='F', цель=goal, full_name=name, место=place,
@@ -115,21 +151,34 @@ def process_start_state(message):
                                                      proteins=round(user_data[user_id]['weight'] * 1.6, 1))
         if goal == 'G':
             PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
-            'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125)
-            bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                      f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125, 1)} ккал в день"
-                                      f"\n\nУчитывайте это значение при составлении"
-                                      f" своего рациона питания во время прохождения курса 21 день.")
+                'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level,
+                                                                        1) * 1.125)
+            # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
+            #                           f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125, 1)} ккал в день"
+            #                           f"\n\nУчитывайте это значение при составлении"
+            #                           f" своего рациона питания во время прохождения курса 21 день.")
         else:
-            PaidUser.objects.filter(user=user_id).update(calories=round((10 * user_data[user_id][
-            'weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level - 161, 1) * 0.875)
-            bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
-                                  f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 0.875, 1)} ккал в день"
-                                  f"\n\nУчитывайте это значение при составлении"
-                                  f" своего рациона питания во время прохождения курса 21 день.")
+            norm = round((10 * user_data[user_id]['weight'] + 6.25 * user_data[user_id]['height'] - 5 * user_data[user_id]['age']) * activity_level * 0.84 - 161, 1)
+
+            PaidUser.objects.filter(user=user_id).update(calories=norm)
+            # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
+            #                           f"{norm} ккал в день"
+            #                           f"\n\nУчитывайте это значение при составлении"
+            #                           f" своего рациона питания во время прохождения курса 21 день.")
 
 
-    start_timezone_check(message)
+@bot.message_handler(state=TestStates.ask_activity, func=lambda message: message.text in ['Все верно!', 'Начать заново'])
+def conduct_calories_norm(message: Message):
+    user_id, chat_id = get_id(message=message)
+    answer = message.text
+    if answer == 'Все верно!':
+        start_timezone_check(message)
+    else:
+        bot.send_message(chat_id=user_id,
+                         text='Как к вам обращаться? 👋\n\nВведите текстом свое имя. Например: "Ибрат"',
+                         reply_markup=ReplyKeyboardRemove())
+
+        bot.set_state(user_id, TestStates.ask_name)
 
 
 @bot.message_handler(state=TestStates.choose_gender, content_types=['text'])
@@ -138,7 +187,7 @@ def conduct_calories_norm(message: Message):
     text = message.text
     if text.lower() in ('м', 'ж'):
         add_data(user_id, 'gender', text.lower())
-        bot.send_message(user_id, "Какой у Вас рост (в см)?")
+        bot.send_message(user_id, 'А теперь впишите ваш рост в цифрах (в см)\n\nНапример: "180"')
         bot.set_state(user_id, TestStates.enter_height, chat_id)
     else:
         bot.send_message(user_id, "Пожалуйста, введите 'М' или 'Ж'.")
@@ -150,10 +199,10 @@ def conduct_calories_nor(message: Message):
     text = message.text
     if is_valid_number(text):
         add_data(user_id, 'height', int(text))
-        bot.send_message(user_id, "Какой у Вас вес (в кг)?")
+        bot.send_message(user_id, 'Впишите, пожалуйста, ваш вес (в кг)\n\nНапример: "65"')
         bot.set_state(user_id, TestStates.enter_weight, chat_id)
     else:
-        bot.send_message(user_id, "Пожалуйста, введите корректный рост (в см).")
+        bot.send_message(user_id, "Попробуйте ввести ваши параметры цифрами (без иных знаков)🪧")
 
 
 @bot.message_handler(state=TestStates.enter_weight, content_types=['text'])
@@ -162,10 +211,10 @@ def conduct_calories_no(message: Message):
     text = message.text
     if is_valid_number(text):
         add_data(user_id, 'weight', int(text))
-        bot.send_message(user_id, "Сколько Вам лет?")
+        bot.send_message(user_id, "Укажите ваш возраст:")
         bot.set_state(user_id, TestStates.enter_age, chat_id)
     else:
-        bot.send_message(user_id, "Пожалуйста, введите корректный вес (в кг).")
+        bot.send_message(user_id, "Попробуйте ввести ваши параметры цифрами (без иных знаков)🪧")
 
 
 @bot.message_handler(state=TestStates.enter_age, content_types=['text'])
@@ -177,7 +226,7 @@ def conduct_calories_n(message: Message):
         markup = create_keyboard_markup(1, 2, 3, 4, 5, row=True)
         bot.send_message(user_id,
                          'Пожалуйста, выберите цифру, наиболее соответствующую уровню вашей активности:'
-                         '\n1: Малоподвижный образ жизни (тренировок нет или их очень мало)'
+                         '\n\n1: Нулевая активность (тренировок нет или их очень мало)'
                          '\n2: Небольшая активность (1-3 тренировки в неделю) '
                          '\n3: Умеренная активность (3-5 тренировок в неделю)'
                          '\n4: Высокая активность (6-7 тренировок в неделю)'
@@ -185,7 +234,7 @@ def conduct_calories_n(message: Message):
                          reply_markup=markup)
         bot.set_state(user_id, TestStates.ask_activity, chat_id)
     else:
-        bot.send_message(user_id, "Пожалуйста, введите корректный возраст (в годах).")
+        bot.send_message(user_id, "Попробуйте ввести ваши параметры цифрами (без иных знаков)🪧")
 
 
 @bot.message_handler(state=TestStates.ask_activity, content_types=['text'])
@@ -220,57 +269,57 @@ def conduct_calories(message: Message):
 # def conduct_calorie(message: Message):
 #     user_id, chat_id = get_id(message=message)
 #     text = message.text
-    # if text in ['Набрать вес', 'Сбросить вес']:
-    #     add_data(user_id, 'goal', text)
-    #     add_data(user_id, 'experience', 'Новичок')
-    #     add_data(user_id, 'place', 'Дом')
-    #     process_start_state(message)
-    # else:
-    #     bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+# if text in ['Набрать вес', 'Сбросить вес']:
+#     add_data(user_id, 'goal', text)
+#     add_data(user_id, 'experience', 'Новичок')
+#     add_data(user_id, 'place', 'Дом')
+#     process_start_state(message)
+# else:
+#     bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
 
-    # elif user_data[user_id]['state'] == States.ASK_GOAL:
-    #     if text in ['Набрать вес', 'Сбросить вес']:
-    #         user_data[user_id]['goal'] = text
-    #         user_data[user_id]['state'] = States.ASK_PLACE
-    #         markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    #         # markup.add(KeyboardButton("Дом"), KeyboardButton("Зал"))
-    #         # bot.send_message(user_id, "Где вы хотите заниматься?", reply_markup=markup)
-    #         user_data[user_id]['state'] = States.START
-    #         user_data[user_id]['experience'] = 'Новичок'
-    #         user_data[user_id]['place'] = 'Дом'
-    #
-    #         process_start_state(message)
-    #     else:
-    #         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+# elif user_data[user_id]['state'] == States.ASK_GOAL:
+#     if text in ['Набрать вес', 'Сбросить вес']:
+#         user_data[user_id]['goal'] = text
+#         user_data[user_id]['state'] = States.ASK_PLACE
+#         markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+#         # markup.add(KeyboardButton("Дом"), KeyboardButton("Зал"))
+#         # bot.send_message(user_id, "Где вы хотите заниматься?", reply_markup=markup)
+#         user_data[user_id]['state'] = States.START
+#         user_data[user_id]['experience'] = 'Новичок'
+#         user_data[user_id]['place'] = 'Дом'
+#
+#         process_start_state(message)
+#     else:
+#         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
-    # elif user_data[user_id]['state'] == States.ASK_PLACE:
-    #     if text in ['Зал', 'Дом']:
-    #         user_data[user_id]['place'] = text
-    #         if user_data[user_id]['place'] == 'Зал':
-    #             user_data[user_id]['state'] = States.ASK_EXPERIENCE
-    #
-    #             markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    #             markup.add(KeyboardButton("Никогда"), KeyboardButton("Больше 2 мес назад"),
-    #                        KeyboardButton("Не занимался около 1 месяца"), KeyboardButton("Занимаюсь регулярно"))
-    #             bot.send_message(user_id, "Насколько давно вы занимались в зале?", reply_markup=markup)
-    #         else:
-    #             user_data[user_id]['experience'] = 'Новичок'
-    #             user_data[user_id]['state'] = States.START
-    #             process_start_state(message)
-    #     else:
-    #         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
-    #
-    # elif user_data[user_id]['state'] == States.ASK_EXPERIENCE:
-    #     if text in ['Никогда', 'Больше 2 мес назад', 'Не занимался около 1 месяца', 'Занимаюсь регулярно']:
-    #         if text in ['Никогда', 'Больше 2 мес назад']:
-    #             user_data[user_id]['experience'] = 'Новичок'
-    #         else:
-    #             user_data[user_id]['experience'] = 'Профессиональный'
-    #         user_data[user_id]['state'] = States.START
-    #         process_start_state(message)
-    #     else:
-    #         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+# elif user_data[user_id]['state'] == States.ASK_PLACE:
+#     if text in ['Зал', 'Дом']:
+#         user_data[user_id]['place'] = text
+#         if user_data[user_id]['place'] == 'Зал':
+#             user_data[user_id]['state'] = States.ASK_EXPERIENCE
+#
+#             markup = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+#             markup.add(KeyboardButton("Никогда"), KeyboardButton("Больше 2 мес назад"),
+#                        KeyboardButton("Не занимался около 1 месяца"), KeyboardButton("Занимаюсь регулярно"))
+#             bot.send_message(user_id, "Насколько давно вы занимались в зале?", reply_markup=markup)
+#         else:
+#             user_data[user_id]['experience'] = 'Новичок'
+#             user_data[user_id]['state'] = States.START
+#             process_start_state(message)
+#     else:
+#         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
+#
+# elif user_data[user_id]['state'] == States.ASK_EXPERIENCE:
+#     if text in ['Никогда', 'Больше 2 мес назад', 'Не занимался около 1 месяца', 'Занимаюсь регулярно']:
+#         if text in ['Никогда', 'Больше 2 мес назад']:
+#             user_data[user_id]['experience'] = 'Новичок'
+#         else:
+#             user_data[user_id]['experience'] = 'Профессиональный'
+#         user_data[user_id]['state'] = States.START
+#         process_start_state(message)
+#     else:
+#         bot.send_message(user_id, "Пожалуйста, выберите вариант из предложенных кнопок.")
 
 
 bot.add_custom_filter(custom_filters.StateFilter(bot))

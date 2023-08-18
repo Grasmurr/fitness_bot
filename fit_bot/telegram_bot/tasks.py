@@ -149,7 +149,7 @@ def change_calories_norm():
                 if user.цель == "G":
                     PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
                 else:
-                    PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.858)
+                    PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.834)
         except Exception as E:
             bot.send_message(305378717, f"Ошибка: {E}")
 

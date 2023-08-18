@@ -16,8 +16,7 @@ def calories_info(message: Message):
     current_day = (timezone.now().date() - user_model.paid_day).days
 
     if current_day == 0:
-        bot.send_message(user_id, 'Курс начнется со следующего дня! '
-                                  'Поэтому и заполнение калорий будет доступно с завтрашнего дня')
+        bot.send_message(user_id, '*Упс...*\n\nЭта функция будет доступна с завтрашнего дня', parse_mode='Markdown')
     else:
         user_calories, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins = \
             return_calories_and_norm(user_model, current_day)
