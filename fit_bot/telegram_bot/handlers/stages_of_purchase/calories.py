@@ -99,7 +99,7 @@ def process_start_state(message):
 
     markup = create_keyboard_markup('Все верно!', 'Начать заново')
 
-    bot.send_message(user_id, response, markup)
+    bot.send_message(chat_id=user_id, text=response, reply_markup=markup)
     activity_levels = [1.2, 1.375, 1.55, 1.725, 1.9]
     activity_level = activity_levels[user_data[user_id]['activity'] - 1]
 
