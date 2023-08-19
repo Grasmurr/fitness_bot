@@ -56,16 +56,13 @@ def start_message(message: Message):
         user.save()
     try:
         paid_user = PaidUser.objects.get(user=user_id)
-        # Если пользователь найден в модели PaidUser, вызываем функцию paid_user_main_menu
-        paid_user_main_menu(message)
+        if paid_user:
+            paid_user_main_menu(message)
+        elif not paid_user and user.has_paid:
+            bot.set_state(user_id, AfterPurchaseStates.initial, chat_id)
         return
     except PaidUser.DoesNotExist:
         pass
-
-    if user.has_paid:
-        bot.set_state(user_id, AfterPurchaseStates.initial, chat_id)
-        return
-
 
     username, full_name = message.from_user.username, message.from_user.full_name
 
