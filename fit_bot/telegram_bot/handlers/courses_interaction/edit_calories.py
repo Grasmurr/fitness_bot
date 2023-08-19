@@ -295,6 +295,10 @@ def delete_or_not_product(call: CallbackQuery):
 
         bot.edit_message_text(f'Вы удалили *{selected_to_delete}*!', chat_id, call.message.message_id,
                               reply_markup=None, parse_mode='Markdown')
+
+        text, markup = meal_info(user, current_day, user_data, user_id,
+                                 user_data[user_id][current_day]['selected_meal'])
+        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
 
 

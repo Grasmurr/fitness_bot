@@ -74,22 +74,22 @@ def start_message(message: Message):
     official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
     bot.send_video(user_id, video=official, reply_markup=markup)
 
-        # daily_contents = Mailing.objects.filter(day=0)
-        #
-        # for content in daily_contents:
-        #     if content.content_type == 'V':
-        #         bot.send_video(chat_id=user.user_id, video=content.video_file_id,
-        #                        caption=content.caption, reply_markup=markup)
-        #     elif content.content_type == 'T':
-        #         bot.send_message(chat_id=user.user_id, text=content.caption,
-        #                          reply_markup=markup)
-        #     elif content.content_type == 'P':
-        #         bot.send_photo(chat_id=user.user_id, photo=content.photo_file_id,
-        #                        caption=content.caption, reply_markup=markup)
-        #     elif content.content_type == 'G':
-        #         bot.send_document(chat_id=user.user_id, document=content.gif_file_id,
-        #                           caption=content.caption, reply_markup=markup)
-        #     time.sleep(3)
+    # daily_contents = Mailing.objects.filter(day=0)
+    #
+    # for content in daily_contents:
+    #     if content.content_type == 'V':
+    #         bot.send_video(chat_id=user.user_id, video=content.video_file_id,
+    #                        caption=content.caption, reply_markup=markup)
+    #     elif content.content_type == 'T':
+    #         bot.send_message(chat_id=user.user_id, text=content.caption,
+    #                          reply_markup=markup)
+    #     elif content.content_type == 'P':
+    #         bot.send_photo(chat_id=user.user_id, photo=content.photo_file_id,
+    #                        caption=content.caption, reply_markup=markup)
+    #     elif content.content_type == 'G':
+    #         bot.send_document(chat_id=user.user_id, document=content.gif_file_id,
+    #                           caption=content.caption, reply_markup=markup)
+    #     time.sleep(3)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Появились вопросики...')

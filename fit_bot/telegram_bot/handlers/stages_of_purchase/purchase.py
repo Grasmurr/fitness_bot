@@ -173,9 +173,11 @@ def confirm_payment(call):
 
         markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
 
+        price = '6990р' if search_term == 'тинькоф' else '150$ |  1 880 000 сум'
+
         bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
                        chat_id=user_id,
-                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
+                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату {price} по реквизитам: "
                                f"\n\n{card_number}", reply_markup=markup)
 
 

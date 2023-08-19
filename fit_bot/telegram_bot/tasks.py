@@ -15,6 +15,7 @@ from .models import PaidUser, FinishedUser, CourseDay, UnpaidUser
 from courses.models import Категории, Content, Mailing, Training
 from .loader import bot
 from .states import States
+from .handlers.courses_interaction.edit_calories_backends import return_calories_and_norm
 
 from .warm_up_bot.handlers.mailings import check_unfinished_users
 
@@ -42,7 +43,8 @@ def send_daily_content():
             )
 
             for content in daily_contents:
-                updated_caption = content.caption.replace("calories", str(user.calories)).replace("name", user.full_name)
+                updated_caption = content.caption.replace("calories", str(user.calories)).replace("name",
+                                                                                                  user.full_name)
 
                 if content.content_type == 'V':
                     video_file_id = content.video.video_file_id
@@ -69,10 +71,17 @@ def check_calories():
 
     for user in paid_users:
         try:
-            bot.send_message(chat_id=user.user, text='Дорогой участник курса! '
-                                                'Пожалуйста, не забывайте заполнять '
-                                                'количество калорий, которые вы за сегодня '
-                                                'употребили, если еще не сделали этого!')
+            name = user.full_name
+            current_day = (timezone.now().date() - user.paid_day).days
+
+            user_calories, remaining_calories, daily_norm, daily_proteins_norm, remaining_proteins \
+                = return_calories_and_norm(user, current_day)
+
+            if daily_norm - remaining_calories < daily_norm * 0.8:
+                bot.send_message(chat_id=user.user,
+                                 text=f'*{name}*! Пожалуйста, не забудьте заполнить ваш дневник калорий на '
+                                      f'сегодняшний день 📓 (приходит, если план выполнен менее чем на 80%)',
+                                 parse_mode='Markdown')
         except apihelper.ApiException as e:
             error_code = e.result.status_code
             if error_code == 403:
@@ -91,7 +100,8 @@ def check_for_daily_content():
         current_day = (timezone.now().date() - user.paid_day).days
         try:
             if current_day != 0:
-                course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day, defaults={'has_requested': False})
+                course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day,
+                                                                      defaults={'has_requested': False})
                 if not course_day.has_requested:
                     bot.send_message(chat_id=user.user, text="Не забудьте открыть тренировки на сегодня!")
         except apihelper.ApiException as e:
@@ -171,6 +181,3 @@ def run_scheduler():
 
 
 scheduler_thread = threading.Thread(target=run_scheduler)
-
-
-

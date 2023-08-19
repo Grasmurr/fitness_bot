@@ -19,8 +19,8 @@ def start_timezone_check(message):
 
     pht = 'AgACAgIAAxkBAAEBKgNk4LHizLxJTIHWapQLr7yovpEDuAAC8tIxGyH1AAFL2mf0ocdGuqcBAAMCAAN5AAMwBA'
 
-
     bot.send_photo(chat_id=user_id,
+                   photo=pht,
                    caption="*Гео…*\n\nПоделитесь, пожалуйста, своим местоположением для определения часового "
                            "пояса ⏱\n\nТак, мы сможем максимально вовремя отправлять вам *важные напоминалки*",
                    reply_markup=markup,
