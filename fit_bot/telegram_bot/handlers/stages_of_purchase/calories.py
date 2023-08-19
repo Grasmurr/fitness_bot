@@ -33,7 +33,6 @@ activity_dct = {
 }
 
 
-
 @bot.message_handler(commands=['test'])
 def run_test(message):
     markup = InlineKeyboardMarkup()
@@ -52,13 +51,14 @@ def start_calories_norm(message: Message):
     user_id, chat_id = get_id(message=message)
 
     markup = create_inline_markup(('Старт!', 'startsurvey'))
-    official = 'AgACAgIAAxkBAAEBKC5k33tlKTGQun6LZ0ZJarPiK7Nk5QACl8sxGyH1-Er1aA-lfQT9TAEAAwIAA3kAAzAE'
+    official = 'AgACAgIAAxkBAAEBKfdk4K7L1R99E3jbS5lXAAFaH3Ay8vsAAufSMRsh9QABS6vZiSjWvPM5AQADAgADeQADMAQ'
     bot.send_photo(photo=official,
-                   caption='Приветик, это снова я!\n\nЧтобы мы составили для вас индивидуальный '
-                           'фитнес-план, вам будут заданы 8 вопросов (эмодзи)\n\nПожалуйста, '
-                           'отвечайте честно 🫡\n\nЧтобы начать, нажмите ”Старт”!',
+                   caption='*Приветик, это снова я!*\n\nЧтобы мы составили для вас индивидуальный фитнес-план, '
+                           'вам будут заданы 8 вопросов 🧾\n\nПожалуйста, '
+                           'отвечайте честно\n\nЧтобы начать, нажмите ”Старт”!',
                    chat_id=user_id,
-                   reply_markup=markup)
+                   reply_markup=markup,
+                   parse_mode='Markdown')
     bot.set_state(user_id, TestStates.start_test, chat_id)
 
 
@@ -90,7 +90,9 @@ def process_start_state(message):
     user_id, chat_id = get_id(message=message)
 
     name = user_data[user_id]['name']
-    response = f"Вот Ваши данные:\n" \
+
+    official = 'AgACAgIAAxkBAAEBKf1k4LACCQjBh3eJAAGafMJ_sWYXQycAAuvSMRsh9QABS0X_HmkGm_1iAQADAgADeQADMAQ'
+    response = f"*Ваши стартовые параметры:*\n" \
                f"Пол: {user_data[user_id]['gender']}\n" \
                f"Рост: {user_data[user_id]['height']} см\n" \
                f"Вес: {user_data[user_id]['weight']} кг\n" \
@@ -99,7 +101,7 @@ def process_start_state(message):
 
     markup = create_keyboard_markup('Все верно!', 'Начать заново')
 
-    bot.send_message(chat_id=user_id, text=response, reply_markup=markup)
+    bot.send_photo(photo=official, chat_id=user_id, caption=response, reply_markup=markup, parse_mode='Markdown')
     activity_levels = [1.2, 1.375, 1.55, 1.725, 1.9]
     activity_level = activity_levels[user_data[user_id]['activity'] - 1]
 
@@ -124,15 +126,16 @@ def process_start_state(message):
     unregistered_user.save()
 
     if user_data[user_id]['gender'] == 'м':
+        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.5, 1)
 
         PaidUser.objects.filter(user=user_id).update(пол='M', цель=goal,
                                                      full_name=name, место=place, уровень=experience,
-                                                     proteins=round(user_data[user_id]['weight'] * 1.6, 1))
+                                                     proteins=protein_norm)
 
         if goal == 'G':
-            PaidUser.objects.filter(user=user_id).update(calories=round((88.362 + 13.397 * user_data[user_id][
-                'weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level,
-                                                                        1) * 1.1)
+            norm = round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level * 1.1, 1)
+
+            PaidUser.objects.filter(user=user_id).update(calories=norm)
             # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
             #                           f"{round(round((88.362 + 13.397 * user_data[user_id]['weight'] + 4.799 * user_data[user_id]['height'] + 5.677 * user_data[user_id]['age']) * activity_level) * 1.1, 1)} ккал в день"
             #                           f"\n\nУчитывайте это значение при составлении своего"
@@ -146,13 +149,15 @@ def process_start_state(message):
             #                           f" рациона питания во время прохождения курса 21 день.")
 
     elif user_data[user_id]['gender'] == 'ж':
+        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.5, 1)
+
         PaidUser.objects.filter(user=user_id).update(пол='F', цель=goal, full_name=name, место=place,
                                                      уровень=experience,
-                                                     proteins=round(user_data[user_id]['weight'] * 1.6, 1))
+                                                     proteins=protein_norm)
         if goal == 'G':
-            PaidUser.objects.filter(user=user_id).update(calories=round((447.593 + 9.247 * user_data[user_id][
-                'weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level,
-                                                                        1) * 1.125)
+            norm = round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level * 1.125, 1)
+
+            PaidUser.objects.filter(user=user_id).update(calories=norm)
             # bot.send_message(user_id, f"Спасибо! Ваша норма калорийности составляет: "
             #                           f"{round(round((447.593 + 9.247 * user_data[user_id]['weight'] + 3.098 * user_data[user_id]['height'] + 4.33 * user_data[user_id]['age']) * activity_level, 1) * 1.125, 1)} ккал в день"
             #                           f"\n\nУчитывайте это значение при составлении"
@@ -187,7 +192,9 @@ def conduct_calories_norm(message: Message):
     text = message.text
     if text.lower() in ('м', 'ж'):
         add_data(user_id, 'gender', text.lower())
-        bot.send_message(user_id, 'А теперь впишите ваш рост в цифрах (в см)\n\nНапример: "180"')
+        bot.send_message(chat_id=user_id,
+                         text='А теперь впишите ваш рост в цифрах (в см)\n\nНапример: "180"',
+                         reply_markup=ReplyKeyboardRemove())
         bot.set_state(user_id, TestStates.enter_height, chat_id)
     else:
         bot.send_message(user_id, "Пожалуйста, введите 'М' или 'Ж'.")

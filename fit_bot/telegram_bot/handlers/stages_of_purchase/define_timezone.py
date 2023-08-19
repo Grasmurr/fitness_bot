@@ -16,9 +16,28 @@ def start_timezone_check(message):
                                            request_location=True)
     skip_button = types.KeyboardButton(text="Пропустить")
     markup.add(location_button, skip_button)
-    bot.send_message(user_id, "Хотите отправить свое местоположение для определения часового пояса?",
-                     reply_markup=markup)
+
+    pht = 'AgACAgIAAxkBAAEBKgNk4LHizLxJTIHWapQLr7yovpEDuAAC8tIxGyH1AAFL2mf0ocdGuqcBAAMCAAN5AAMwBA'
+
+
+    bot.send_photo(chat_id=user_id,
+                   caption="*Гео…*\n\nПоделитесь, пожалуйста, своим местоположением для определения часового "
+                           "пояса ⏱\n\nТак, мы сможем максимально вовремя отправлять вам *важные напоминалки*",
+                   reply_markup=markup,
+                   parse_mode='Markdown')
     bot.set_state(user_id, GeopositionStates.initial, chat_id)
+
+
+def final_message(user_id):
+    txt = '🔥 *Ура! Вы прошли все этапы*\n\nТеперь мы сможем подобрать стратегию питания и ' \
+          'активности лично под вас!\n\n- Что дальше?\n- Узнаете на первом эфире'
+    pht = 'AgACAgIAAxkBAAEBKgABZOCxOvu_bwABhiQ3LmwCtQPAC9GJAALv0jEbIfUAAUulCGJFtIWWAgEAAwIAA3kAAzAE'
+
+    bot.send_photo(chat_id=user_id,
+                   caption=txt,
+                   photo=pht,
+                   parse_mode='Markdown',
+                   reply_markup=types.ReplyKeyboardRemove())
 
 
 @bot.message_handler(state=GeopositionStates.initial, content_types=['location'])
@@ -31,7 +50,7 @@ def handle_location(message):
     timezone = pytz.timezone(timezone_name)
     PaidUser.objects.filter(user=user_id).update(timezone=timezone)
     bot.send_message(user_id, f"Ваш часовой пояс: {timezone}")
-    bot.send_message(user_id, "Спасибо!", reply_markup=types.ReplyKeyboardRemove())
+    final_message(chat_id)
     paid_user_main_menu(message)
 
 
@@ -41,7 +60,7 @@ def skip_location(message):
     default_timezone = pytz.timezone("Europe/Moscow")
     bot.send_message(message.chat.id, f"Ваш часовой пояс: {default_timezone}")
     PaidUser.objects.filter(user=user_id).update(timezone=default_timezone)
-    bot.send_message(user_id, "Спасибо!", reply_markup=types.ReplyKeyboardRemove())
+    final_message(chat_id)
     paid_user_main_menu(message)
 
 

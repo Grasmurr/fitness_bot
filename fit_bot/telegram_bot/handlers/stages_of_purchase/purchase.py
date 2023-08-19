@@ -30,11 +30,11 @@ def after_greeting(call: CallbackQuery):
 
     test = 'AgACAgIAAxkBAAIxZmTWibqN_mHYK-1uJs08CdoexIw0AAI4zDEb8Jm5SqYMWroMFb56AQADAgADeQADMAQ'
     official = 'AgACAgIAAxkBAAEBJA9k2rj2-rChgpOYjuzj5M0XhhxWVwAC4coxG3dI2EqAfXmGAAHDqlABAAMCAAN5AAMwBA'
-    text = '👋 Привет, меня зовут Лиза\n\n' \
+    text = '*👋 Привет, меня зовут Лиза*\n\n' \
            'Я – виртуальный ассистент Ибрата и буду помогать вам на всем ' \
            'пути взаимодействия с ботом ☺️'
 
-    bot.send_photo(chat_id, photo=official, caption=text, reply_markup=markup)
+    bot.send_photo(chat_id, photo=official, caption=text, reply_markup=markup, parse_mode='Markdown')
 
     markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
                                   ('Другое', 'other'))
@@ -55,18 +55,26 @@ def after_greeting(call: CallbackQuery):
     elif answer == 'tinkoff':
         markup = create_inline_markup(('назад', 'back_to_bank_choose'))
 
-        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
-                              text='Введите, пожалуйста, свои инициалы, чтобы после оплаты мы смогли проверить '
-                                   'ваш перевод\n\nНапример: "Иван И."', reply_markup=markup)
+        bot.edit_message_text(chat_id=chat_id,
+                              message_id=call.message.message_id,
+                              text='*🧗Инициалы...*\n\nВведите, пожалуйста, свои инициалы, чтобы после оплаты мы '
+                                   'смогли проверить '
+                                   'ваш перевод\n\nНапример: "Иван И."',
+                              reply_markup=markup,
+                              parse_mode='Markdown')
         add_data(user_id, 'chosen_method', 'тинькоф')
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
     elif answer == 'click':
         markup = create_inline_markup(('назад', 'back_to_bank_choose'))
 
-        bot.edit_message_text(chat_id=chat_id, message_id=call.message.message_id,
-                              text='Введите, пожалуйста, свои имя и фамилию, чтобы после оплаты мы смогли '
-                                   'проверить ваш перевод\n\nНапример: "Иван Иванов"', reply_markup=markup)
+        bot.edit_message_text(chat_id=chat_id,
+                              message_id=call.message.message_id,
+                              text='*🧗Инициалы...*\n\nВведите, пожалуйста, свои имя и фамилию, чтобы после '
+                                   'оплаты мы смогли '
+                                   'проверить ваш перевод\n\nНапример: "Иван Иванов"',
+                              reply_markup=markup,
+                              parse_mode='Markdown')
         add_data(user_id, 'chosen_method', 'click')
         bot.set_state(user_id, PurchaseStates.initial, chat_id)
 
@@ -107,9 +115,11 @@ def handle_initials(call: CallbackQuery):
 
         markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
 
+        price = '6990р' if search_term == 'тинькоф' else '150$ |  1 880 000 сум'
+
         bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
                        chat_id=user_id,
-                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату 6990р по реквизитам: "
+                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату {price} по реквизитам: "
                                f"\n\n{card_number}", reply_markup=markup)
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
     else:
@@ -125,7 +135,7 @@ def handle_payment(call):
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
         markup = create_inline_markup(('Подтверждаю', 'confirm_payment'), ('Назад', 'go_back'))
         bot.send_message(chat_id=chat_id,
-                         text="Если уже оплатили, нажмите на кнопку «Подтвердить» ✅",
+                         text="Если уже оплатили, нажмите на кнопку «Подтверждаю» ✅",
                          reply_markup=markup)
     elif answer == 'back':
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
@@ -184,10 +194,10 @@ def approve_payment(call):
         BankCards.objects.filter(bank_name__icontains=search_term).update(
             number_of_activations=F('number_of_activations') + 1)
         official = 'AgACAgIAAxkBAAEBJBJk2rllWOyWYpscLJxfu7UWvw_dmwACgswxG3Rr2Er9A73F4DaK6QEAAwIAA3kAAzAE'
-        bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='Ваша подписка подтверждена!❤️‍🔥\n\n'
+        bot.send_photo(chat_id=int(call.data[8:]), photo=official, caption='*Ваша подписка подтверждена!*❤️‍🔥\n\n'
                                                                            'Для дальнейших действий переходите в '
                                                                            'общий чат коучинга, нажав на кнопку',
-                       reply_markup=markup)
+                       reply_markup=markup, parse_mode='Markdown')
         bot.set_state(user_id=int(call.data[8:]), state=AfterPurchaseStates.initial, chat_id=int(call.data[8:]))
 
     else:

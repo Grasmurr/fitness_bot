@@ -93,7 +93,7 @@ def create_main_editing_menu(user, current_day):
         remaining_calories = '0'
     if remaining_proteins < 0:
         remaining_proteins = '0'
-
+    name = user.full_name
     text = (
         f"*Текущая норма: {daily_norm} ккал / {daily_proteins_norm} г белка*\n\n"
         f"*🍳 Завтрак:*\n"
@@ -107,7 +107,7 @@ def create_main_editing_menu(user, current_day):
         f"*🧾 Итого за день:*\n"
         f"Ккал: {round(user_calories['breakfast']['calories'] + user_calories['lunch']['calories'] + user_calories['dinner']['calories'] + user_calories['snack']['calories'], 1)} ккал\n"
         f"Белка: {round(user_calories['breakfast']['protein'] + user_calories['lunch']['protein'] + user_calories['dinner']['protein'] + user_calories['snack']['protein'], 1)} г белка\n\n"
-        f"*Вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
+        f"*{name}, вам еще нужно съесть:* \n{remaining_calories} ккал / {remaining_proteins}г белка"
     )
 
     markup = create_calories_menu()

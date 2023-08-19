@@ -6,7 +6,7 @@ from telebot import custom_filters
 
 from ..loader import bot
 from ..models import UnpaidUser, PaidUser
-from ..states import CourseInteraction
+from ..states import CourseInteraction, AfterPurchaseStates
 from courses.models import Mailing
 
 
@@ -50,7 +50,7 @@ def create_keyboard_markup(*args, row=False):
 
 @bot.message_handler(commands=['start'])
 def start_message(message: Message):
-    user_id = message.from_user.id
+    user_id, chat_id = get_id(message=message)
     user, created = UnpaidUser.objects.get_or_create(user_id=user_id)
     if created:
         user.save()
@@ -63,6 +63,7 @@ def start_message(message: Message):
         pass
 
     if user.has_paid:
+        bot.set_state(user_id, AfterPurchaseStates.initial, chat_id)
         return
 
 
@@ -108,7 +109,7 @@ def just_main_menu(message: Message):
 def paid_user_main_menu(message: Message):
     user_id, chat_id = get_id(message=message)
     markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                    'Сколько еще можно ккал?👀', 'Карта продукта', 'Появились вопросики...')
+                                    'Сколько еще можно ккал?👀', 'Карта программы 🗺', 'Появились вопросики...')
     bot.set_state(user_id, CourseInteraction.initial, chat_id)
     bot.send_message(user_id, text='Главное меню', reply_markup=markup)
 
