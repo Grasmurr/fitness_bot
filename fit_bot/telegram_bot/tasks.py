@@ -80,7 +80,7 @@ def check_calories():
             if daily_norm - remaining_calories < daily_norm * 0.8:
                 bot.send_message(chat_id=user.user,
                                  text=f'*{name}*! Пожалуйста, не забудьте заполнить ваш дневник калорий на '
-                                      f'сегодняшний день 📓 (приходит, если план выполнен менее чем на 80%)',
+                                      f'сегодняшний день 📓',
                                  parse_mode='Markdown')
         except apihelper.ApiException as e:
             error_code = e.result.status_code

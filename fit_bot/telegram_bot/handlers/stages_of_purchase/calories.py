@@ -126,7 +126,7 @@ def process_start_state(message):
     unregistered_user.save()
 
     if user_data[user_id]['gender'] == 'м':
-        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.5, 1)
+        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.7, 1)
 
         PaidUser.objects.filter(user=user_id).update(пол='M', цель=goal,
                                                      full_name=name, место=place, уровень=experience,
@@ -149,7 +149,7 @@ def process_start_state(message):
             #                           f" рациона питания во время прохождения курса 21 день.")
 
     elif user_data[user_id]['gender'] == 'ж':
-        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.5, 1)
+        protein_norm = round((user_data[user_id]['weight'] * 0.252 + user_data[user_id]['height'] * 0.477 - 48.3) * 1.7, 1)
 
         PaidUser.objects.filter(user=user_id).update(пол='F', цель=goal, full_name=name, место=place,
                                                      уровень=experience,

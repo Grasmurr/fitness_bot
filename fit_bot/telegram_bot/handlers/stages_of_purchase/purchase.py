@@ -115,12 +115,16 @@ def handle_initials(call: CallbackQuery):
 
         markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
 
-        price = '6990р' if search_term == 'тинькоф' else '150$ |  1 880 000 сум'
+        price = '15 000 RUB' if search_term == 'тинькоф' else '1 880 000 сум'
+        name = 'Тинькоф' if search_term == 'тинькоф' else 'Click / Payme'
 
         bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
                        chat_id=user_id,
-                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату {price} по реквизитам: "
-                               f"\n\n{card_number}", reply_markup=markup)
+                       caption=f"*🔥 Доступ к программе уже близко!*\n\nОсталось перевести оплату {price} "
+                               f"по реквизитам:"
+                               f"\n\n{card_number}\n\n{name}",
+                       reply_markup=markup,
+                       parse_mode='Markdown')
         bot.set_state(user_id, PurchaseStates.choose_bank, chat_id)
     else:
         bot.edit_message_text(chat_id=chat_id, text='Хорошо! Можете ввести инициалы еще раз:',
@@ -173,12 +177,16 @@ def confirm_payment(call):
 
         markup = create_inline_markup(('Оплатил(а)', 'paid'), ('Назад', 'back'))
 
-        price = '6990р' if search_term == 'тинькоф' else '150$ |  1 880 000 сум'
+        price = '15 000 RUB' if search_term == 'тинькоф' else '1 880 000 сум'
+        name = 'Тинькоф' if search_term == 'тинькоф' else 'Click / Payme'
 
         bot.send_photo(photo='AgACAgIAAxkBAAL6LGSZk6v6A55yfB8rGn2U_K-VyiRtAALfyzEbqbHRSCOlCtFXAAHOJgEAAwIAA3kAAy8E',
                        chat_id=user_id,
-                       caption=f"Доступ к программе уже близко!\n\nОсталось перевести оплату {price} по реквизитам: "
-                               f"\n\n{card_number}", reply_markup=markup)
+                       caption=f"*🔥 Доступ к программе уже близко!*\n\nОсталось перевести оплату {price} "
+                               f"по реквизитам:"
+                               f"\n\n{card_number}\n\n{name}",
+                       reply_markup=markup,
+                       parse_mode='Markdown')
 
 
 @bot.callback_query_handler(state=PurchaseStates.choose_bank,

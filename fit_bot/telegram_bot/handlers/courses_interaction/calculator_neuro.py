@@ -40,9 +40,13 @@ def handle_new_product(message: Message):
     course_day = CourseDay.objects.get(user=user, day=current_day)
     text, markup = meal_info(user, current_day, user_data, user_id, meal)
     if answer == 'Отмена!':
-        paid_user_main_menu(message)
-        bot.send_message(user_id, 'Отменено!')
+
+        keyboard_markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                                 'Сколько еще можно ккал?👀', 'Карта программы 🗺',
+                                                 'Появились вопросики...')
+        bot.send_message(chat_id=user_id, text='Отменено!', reply_markup=keyboard_markup)
         bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+        bot.set_state(user_id, CourseInteraction.initial, chat_id)
     else:
         calories_data[user_id]['chosen_dish'] = answer
 

@@ -27,7 +27,16 @@ def handle_update_calories(message: Message):
 
         elif 0 < current_day < 22:
             text, markup = create_main_editing_menu(user, current_day)
-            bot.send_message(user_id, text, reply_markup=markup, parse_mode='Markdown')
+
+            pht_official = 'AgACAgIAAxkBAAEBLMxk40CkwmfZWooYJUzq9TBeNZECFgACoc0xGzBEGEu0HBxFbSMbMwEAAwIAA3kAAzAE'
+
+            pht_test = 'AgACAgIAAxkBAAIxumTjQgFFi1hILZKHBX7te2r2uFV9AAL0yjEbDvkhSyfOKdqx2dvIAQADAgADeQADMAQ'
+
+            bot.send_photo(chat_id=user_id,
+                           caption=text,
+                           photo=pht_official,
+                           reply_markup=markup,
+                           parse_mode='Markdown')
 
         else:
             bot.send_message(user_id, 'Кажется, курс закончился!')
@@ -49,10 +58,18 @@ def handle_meal_callback(call):
         user_data[user_id][current_day] = {}
     if meal not in user_data[user_id][current_day]:
         user_data[user_id][current_day][meal] = {}
+
     user_data[user_id][current_day]['selected_meal'] = meal
+
     text, markup = meal_info(user, current_day, user_data, user_id, meal)
 
-    bot.edit_message_text(text, chat_id, call.message.message_id, reply_markup=markup, parse_mode='Markdown')
+    bot.delete_message(chat_id=chat_id,
+                       message_id=call.message.message_id)
+
+    bot.send_message(text=text,
+                     chat_id=chat_id,
+                     reply_markup=markup,
+                     parse_mode='Markdown')
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'back')
@@ -60,9 +77,21 @@ def back_to_menu(call: CallbackQuery):
     user_id, chat_id = get_id(call=call)
     user = PaidUser.objects.get(user=user_id)
     current_day = (timezone.now().date() - user.paid_day).days
+
+    bot.delete_message(chat_id=chat_id,
+                       message_id=call.message.message_id)
+
     text, markup = create_main_editing_menu(user, current_day)
-    bot.edit_message_text(chat_id=chat_id, text=text, message_id=call.message.message_id,
-                          reply_markup=markup, parse_mode='Markdown')
+
+    pht_official = 'AgACAgIAAxkBAAEBLMxk40CkwmfZWooYJUzq9TBeNZECFgACoc0xGzBEGEu0HBxFbSMbMwEAAwIAA3kAAzAE'
+
+    pht_test = 'AgACAgIAAxkBAAIxumTjQgFFi1hILZKHBX7te2r2uFV9AAL0yjEbDvkhSyfOKdqx2dvIAQADAgADeQADMAQ'
+
+    bot.send_photo(chat_id=user_id,
+                   caption=text,
+                   photo=pht_official,
+                   reply_markup=markup,
+                   parse_mode='Markdown')
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'add_remove')
@@ -82,10 +111,26 @@ def handle_add_remove_callback(call):
 def handle_entered_meal_name(message: Message):
     user_id, chat_id = get_id(message=message)
     answer = message.text
+
+    user = PaidUser.objects.get(user=user_id)
+    current_day = (timezone.now().date() - user.paid_day).days
+
     if answer == 'Отмена!':
-        bot.send_message(text="Вы отменили добавление нового блюда.", chat_id=chat_id)
-        paid_user_main_menu(message)
+        markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                        'Сколько еще можно ккал?👀', 'Карта программы 🗺', 'Появились вопросики...')
+
+        bot.send_message(text="Вы отменили добавление нового блюда.",
+                         chat_id=chat_id,
+                         reply_markup=markup)
+
+        text, markup = meal_info(user, current_day, user_data, user_id,
+                                 user_data[user_id][current_day]['selected_meal'])
+        bot.send_message(text=text,
+                         chat_id=chat_id,
+                         reply_markup=markup,
+                         parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
+
     else:
         if user_id not in for_meal_from_user:
             for_meal_from_user[user_id] = {}
@@ -176,15 +221,27 @@ def handle_meal_name(message: Message):
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
     elif answer == 'Изменить':
         markup = create_keyboard_markup('Отмена!')
-        bot.send_message(user_id, 'Введите новое название блюда:', reply_markup=markup)
+        bot.send_message(chat_id=user_id,
+                         text='Введите новое название блюда:',
+                         reply_markup=markup)
         bot.set_state(user_id, CourseInteraction.enter_meal_name, chat_id)
-    else:
-        bot.send_message(text="Вы отменили добавление нового блюда.", chat_id=chat_id)
-        paid_user_main_menu(message)
+    elif answer == 'Отмена!':
+
+        markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                        'Сколько еще можно ккал?👀', 'Карта программы 🗺', 'Появились вопросики...')
+
+        bot.send_message(text="Вы отменили добавление нового блюда.",
+                         chat_id=chat_id, reply_markup=markup)
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  user_data[user_id][current_day]['selected_meal'])
-        bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
+        bot.send_message(text=text,
+                         chat_id=chat_id,
+                         reply_markup=markup,
+                         parse_mode='Markdown')
         bot.set_state(user_id, CourseInteraction.initial, chat_id)
+    else:
+        bot.send_message(chat_id=chat_id,
+                         text='Пожалуйста, воспользуйтесь кнопками "Продолжить", "Изменить" или "Отмена!"')
 
 
 @bot.callback_query_handler(state=CourseInteraction.initial, func=lambda call: call.data == 'redact')
@@ -265,11 +322,6 @@ def delete_or_not_product(call: CallbackQuery):
         user = PaidUser.objects.get(user=user_id)
         current_day = (timezone.now().date() - user.paid_day).days
 
-        keyboard_markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
-                                        'Сколько еще можно ккал?👀', 'Карта программы 🗺', 'Появились вопросики...')
-
-        bot.send_message(user_id, 'Главное меню', reply_markup=keyboard_markup)
-
         course_day, created = CourseDay.objects.get_or_create(user=user, day=current_day)
         meal, _ = Meal.objects.get_or_create(course_day=course_day,
                                              meal_type=user_data[user_id][current_day]['selected_meal'])
@@ -293,8 +345,16 @@ def delete_or_not_product(call: CallbackQuery):
         selected_to_delete = user_data[user_id][current_day]['variants_to_delete'][
             user_data[user_id][current_day]['selected_meal_to_delete']].split("-")[1].strip()
 
-        bot.edit_message_text(f'Вы удалили *{selected_to_delete}*!', chat_id, call.message.message_id,
-                              reply_markup=None, parse_mode='Markdown')
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+
+        keyboard_markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
+                                                 'Сколько еще можно ккал?👀', 'Карта программы 🗺',
+                                                 'Появились вопросики...')
+
+        bot.send_message(text=f'Вы удалили *{selected_to_delete}*!',
+                         chat_id=chat_id,
+                         reply_markup=keyboard_markup,
+                         parse_mode='Markdown')
 
         text, markup = meal_info(user, current_day, user_data, user_id,
                                  user_data[user_id][current_day]['selected_meal'])
