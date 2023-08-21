@@ -195,7 +195,7 @@ def handle_grams_count(message: Message):
     try:
         answer = answer.replace(',', '.')
         amount = float(answer)
-        if -1 < int(answer) < 5001:
+        if -1 < float(answer) < 5001:
             markup = create_keyboard_markup('Получить тренировки 🎾', 'Мой дневник калорий 📆',
                                             'Сколько еще можно ккал?👀', 'Карта программы 🗺', 'Появились вопросики...')
             bot.send_message(chat_id=chat_id, text='Добавлено!', reply_markup=markup)
@@ -231,7 +231,7 @@ def handle_grams_count(message: Message):
             bot.send_message(text=text, chat_id=chat_id, reply_markup=markup, parse_mode='Markdown')
             bot.set_state(user_id, CourseInteraction.initial, chat_id)
     except:
-        bot.send_message('Кажется, вы ввели что-то не так, попробуйте еще раз. Например, 150:')
+        bot.send_message(text='Кажется, вы ввели что-то не так, попробуйте еще раз. Например, 150:', chat_id=chat_id)
 
 
 @bot.callback_query_handler(state=CourseInteraction.choose_amount, func=lambda call: call.data)

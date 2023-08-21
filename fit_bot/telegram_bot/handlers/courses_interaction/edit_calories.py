@@ -148,7 +148,7 @@ def handle_meal_calories(message: Message):
     try:
         answer = answer.replace(',', '.')
         answer = float(answer)
-        if -1 < int(answer) < 5001:
+        if -1 < float(answer) < 5001:
             for_meal_from_user[user_id]['calories'] = answer
             bot.send_message(user_id, 'Введите количество *белка* для данного продукта:', parse_mode='Markdown')
             bot.set_state(user_id, CourseInteraction.enter_meal_protein, chat_id)
@@ -165,7 +165,7 @@ def handle_meal_calories(message: Message):
     try:
         answer = answer.replace(',', '.')
         answer = float(answer)
-        if -1 < int(answer) < 5001:
+        if -1 < float(answer) < 5001:
             for_meal_from_user[user_id]['proteins'] = answer
 
             markup = create_keyboard_markup('Продолжить', 'Изменить', 'Отмена!')
