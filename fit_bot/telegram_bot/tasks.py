@@ -160,6 +160,9 @@ def change_calories_norm():
                     PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 1.022)
                 else:
                     PaidUser.objects.filter(user=user.user).update(calories=F('calories') * 0.834)
+                bot.send_message(chat_id=user.user,
+                                 text=f'{user.full_name}, мы обновили вашу норму калорий!\n\n'
+                                      f'Вы можете увидеть новую норму в дневнике калорий')
         except Exception as E:
             bot.send_message(305378717, f"Ошибка: {E}")
 
