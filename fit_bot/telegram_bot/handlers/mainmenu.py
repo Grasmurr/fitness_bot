@@ -68,11 +68,11 @@ def start_message(message: Message):
 
     user = UnpaidUser(user_id=message.from_user.id, username=username, full_name=full_name)
     user.save()
-    markup = create_inline_markup(('Погнали!', 'Go_for_it'))
-    # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
-    # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
-    official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
-    bot.send_video(user_id, video=official, reply_markup=markup)
+    # markup = create_inline_markup(('Погнали!', 'Go_for_it'))
+    # # markup = create_keyboard_markup('Приобрести подписку на курс', 'Появились вопросики...')
+    # # test = 'BAACAgIAAxkBAAIxYGTWh_wDmD32nJlzJLLGOArhY3W6AAI8MwACs4axSvCiT5O4osErMAQ'
+    # official = 'BAACAgIAAxkBAAEBICtk1ohR32s4sZirw2ksKvRvwSq6rAACPDMAArOGsUrqNisitMXu0TAE'
+    # bot.send_video(user_id, video=official, reply_markup=markup)
 
     # daily_contents = Mailing.objects.filter(day=0)
     #
@@ -90,6 +90,22 @@ def start_message(message: Message):
     #         bot.send_document(chat_id=user.user_id, document=content.gif_file_id,
     #                           caption=content.caption, reply_markup=markup)
     #     time.sleep(3)
+
+    markup = create_keyboard_markup('Появились вопросики...')
+
+    test = 'AgACAgIAAxkBAAIxZmTWibqN_mHYK-1uJs08CdoexIw0AAI4zDEb8Jm5SqYMWroMFb56AQADAgADeQADMAQ'
+    official = 'AgACAgIAAxkBAAEBJA9k2rj2-rChgpOYjuzj5M0XhhxWVwAC4coxG3dI2EqAfXmGAAHDqlABAAMCAAN5AAMwBA'
+    text = '*👋 Привет, меня зовут Лиза*\n\n' \
+           'Я – виртуальный ассистент Ибрата и буду помогать вам на всем ' \
+           'пути взаимодействия с ботом ☺️'
+
+    bot.send_photo(chat_id, photo=official, caption=text, reply_markup=markup, parse_mode='Markdown')
+
+    markup = create_inline_markup(('Тинькофф (Россия)', 'tinkoff'), ('Click/Payme (Узбекистан)', 'click'),
+                                  ('Другое', 'other'))
+
+    bot.send_message(chat_id, text='Чтобы получить доступ к программе, выберите удобный для вас способ оплаты:',
+                     reply_markup=markup)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Появились вопросики...')
