@@ -365,6 +365,8 @@ def describe_problem(message: Message):
         bot.send_message(305378717, text=text, parse_mode='Markdown')
         bot.send_message(58790442, text=text, parse_mode='Markdown')
         bot.send_message(6553857524, text=text, parse_mode='Markdown')
+        bot.send_message(96595636, text=text, parse_mode='Markdown')
+
         bot.set_state(user_id, States.START, chat_id)
     except Exception as E:
         bot.send_message(305378717, f'Ошибка! {E}')
